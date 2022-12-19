@@ -1,0 +1,52 @@
+[package]
+name = "anchor_basset_hub"
+version = "1.0.0"
+authors = ["MSNTCS <mohammad@terra.money>"]
+edition = "2018"
+
+exclude = [
+  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+  "contract.wasm",
+  "hash.txt",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+
+[features]
+# for quicker tests, cargo test --lib
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+
+[dependencies]
+cw20 = { version = "0.15.1" }
+cw20-base = { version = "0.15.1" }
+cosmwasm-std = { version = "1.1.0", features = ["iterator"] }
+cosmwasm-storage = { version = "1.1.0", features = ["iterator"] }
+cw-storage-plus = { version = "0.15.1", features = ["iterator"]}
+schemars = "0.8.1"
+serde = { version = "1.0.103", default-features = false, features = ["derive"] }
+snafu = { version = "0.6.3" }
+rand = "0.5.0"
+anchor_basset_token = {path = "../anchor_basset_token"}
+basset = { path = "../../packages/basset", default-features = false, version = "1.1.0"}
+lido_terra_validators_registry = {path = "../lido_terra_validators_registry", features = ["library"]}
+
+signed_integer = { path = "../../packages/signed_integers", default-features = false, version = "0.1.0"}
+
+[dev-dependencies]
+cosmwasm-vm = { version = "1.1.0", default-features = false, features = ["iterator"] }
+cosmwasm-schema = "1.1.0"
