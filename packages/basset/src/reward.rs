@@ -22,21 +22,8 @@ pub enum ExecuteMsg {
     /// Swap all of the balances to uusd.
     SwapToRewardDenom {},
 
-    /// Update the global index
-    UpdateGlobalIndex {},
-
-    ////////////////////
-    /// bAsset's operations
-    ///////////////////
-
-    /// Increase user staking balance
-    /// Withdraw rewards to pending rewards
-    /// Set current reward index to global index
-    IncreaseBalance { address: String, amount: Uint128 },
-    /// Decrease user staking balance
-    /// Withdraw rewards to pending rewards
-    /// Set current reward index to global index
-    DecreaseBalance { address: String, amount: Uint128 },
+    /// Sets the custody contract (one time)
+    SetCustodyContract { custody_contract: String },
 
     ////////////////////
     /// User's operations
@@ -50,30 +37,13 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    State {},
-    AccruedRewards {
-        address: String,
-    },
-    Holder {
-        address: String,
-    },
-    Holders {
-        start_after: Option<String>,
-        limit: Option<u32>,
-    },
+    AccruedRewards { address: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
     pub hub_contract: String,
     pub reward_denom: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct StateResponse {
-    pub global_index: Decimal256,
-    pub total_balance: Uint128,
-    pub prev_reward_balance: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

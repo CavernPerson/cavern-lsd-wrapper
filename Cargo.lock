@@ -29,11 +29,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "anchor_basset_hub"
+name = "anchor_aasset_hub"
 version = "1.0.0"
 dependencies = [
- "anchor_basset_token",
  "basset",
+ "cavern-lsd-wrapper-token",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
@@ -41,7 +41,6 @@ dependencies = [
  "cw-storage-plus",
  "cw20",
  "cw20-base",
- "lido_terra_validators_registry",
  "rand 0.5.6",
  "schemars",
  "serde",
@@ -63,23 +62,6 @@ dependencies = [
  "serde",
  "strum",
  "thiserror",
-]
-
-[[package]]
-name = "anchor_basset_token"
-version = "1.0.0"
-dependencies = [
- "basset",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-storage-plus",
- "cw2",
- "cw20",
- "cw20-base",
- "schemars",
- "serde",
- "snafu",
 ]
 
 [[package]]
@@ -193,6 +175,23 @@ name = "byteorder"
 version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
+
+[[package]]
+name = "cavern-lsd-wrapper-token"
+version = "1.0.0"
+dependencies = [
+ "basset",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "schemars",
+ "serde",
+ "snafu",
+]
 
 [[package]]
 name = "cc"
@@ -997,20 +996,6 @@ checksum = "6f84d96438c15fcd6c3f244c8fce01d1e2b9c6b5623e9c711dc9286d8fc92d6a"
 dependencies = [
  "cfg-if",
  "winapi",
-]
-
-[[package]]
-name = "lido_terra_validators_registry"
-version = "1.1.0"
-dependencies = [
- "basset",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-storage-plus",
- "schemars",
- "serde",
- "snafu",
 ]
 
 [[package]]
