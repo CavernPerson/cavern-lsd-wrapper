@@ -3,8 +3,8 @@ use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage};
 use cosmwasm_std::Empty;
 use cosmwasm_std::{
     from_binary, from_slice, to_binary, AllBalanceResponse, Api, BalanceResponse, BankQuery,
-    CanonicalAddr, Coin, ContractResult, Decimal, FullDelegation, OwnedDeps, Querier,
-    QuerierResult, QueryRequest, SystemError, SystemResult, Uint128, Validator, WasmQuery,
+    CanonicalAddr, Coin, ContractResult, Decimal, OwnedDeps, Querier,
+    QuerierResult, QueryRequest, SystemError, SystemResult, Uint128, WasmQuery,
 };
 use cosmwasm_storage::to_length_prefixed;
 use cw20::TokenInfoResponse;
@@ -213,14 +213,6 @@ impl WasmMockQuerier {
             }
             _ => self.base.handle_query(request),
         }
-    }
-    pub fn update_staking(
-        &mut self,
-        denom: &str,
-        validators: &[Validator],
-        delegations: &[FullDelegation],
-    ) {
-        self.base.update_staking(denom, validators, delegations);
     }
 }
 

@@ -10,6 +10,8 @@ pub struct InstantiateMsg {
     pub astroport_addr: String,
     pub phoenix_addr: String,
     pub terraswap_addr: String,
+    // Known tokens to swap from to the stable_token
+    pub known_tokens: Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -22,9 +24,11 @@ pub enum ExecuteMsg {
     /// Swap all of the balances to uusd.
     SwapToRewardDenom {},
 
-    /// Sets the custody contract (one time)
-    SetCustodyContract { custody_contract: String },
-
+    /// Updates the contract config
+    UpdateConfig { 
+        custody_contract: Option<String>,
+        known_tokens: Option<Vec<String>>
+    },
     ////////////////////
     /// User's operations
     ///////////////////

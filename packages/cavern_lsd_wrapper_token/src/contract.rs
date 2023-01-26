@@ -1,17 +1,22 @@
+use basset::external::LSDStateResponseTrait;
+use serde::Deserialize;
 use basset::reward::MigrateMsg;
+use basset::wrapper::TokenInfoResponse;
+use cw20_base::contract::query_token_info;
 use crate::querier::get_current_exchange_rate;
 use crate::state::HUB_CONTRACT_KEY;
 use crate::state::LsdContracts;
+
 use crate::state::WrapperState;
 use crate::state::read_lsd_contract;
-use crate::state::read_wrapper_state;
+
+
 use crate::state::store_hub_contract;
 use crate::state::store_lsd_contract;
-use crate::state::store_wrapper_state;
+
 use basset::wrapper::AccruedRewards;
 use basset::wrapper::ExecuteMsg;
 use cosmwasm_std::attr;
-#[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::to_binary;
 use cosmwasm_std::CosmosMsg;
@@ -34,7 +39,6 @@ use crate::msg::TokenInitMsg;
 use cw20::MinterResponse;
 use cw20_base::ContractError;
 
-#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
@@ -44,13 +48,6 @@ pub fn instantiate(
     store_lsd_contract(deps.storage, &LsdContracts{
         hub: deps.api.addr_validate(&msg.lsd_hub_contract)?,
         token: deps.api.addr_validate(&msg.lsd_token_contract)?
-    })?;
-
-    store_wrapper_state(deps.storage, &WrapperState{
-        prev_backing_luna: Decimal::zero(),
-        prev_wlsd_supply: Uint128::zero(),
-        prev_lsd_balance: Uint128::zero(),
-        prev_lsd_exchange_rate: Decimal::one()
     })?;
 
     store_hub_contract(deps.storage, &deps.api.addr_validate(&msg.hub_contract)?)?;
@@ -77,8 +74,7 @@ pub fn instantiate(
     Ok(Response::default())
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn execute(
+pub fn execute<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -88,14 +84,15 @@ pub fn execute(
         ExecuteMsg::Transfer { recipient, amount } => {
             execute_transfer(deps, env, info, recipient, amount)
         }
-        ExecuteMsg::Burn { amount } => execute_burn(deps, env, info, amount),
+        ExecuteMsg::Burn { amount } => execute_burn::<T>(deps, env, info, amount),
+        ExecuteMsg::BurnAll { } => execute_burn_all::<T>(deps, env, info),
         ExecuteMsg::Send {
             contract,
             amount,
             msg,
         } => execute_send(deps, env, info, contract, amount, msg),
-        ExecuteMsg::Mint { recipient, amount } => execute_mint(deps, env, info, recipient, amount),
-        ExecuteMsg::MintWith { recipient, lsd_amount } => execute_mint_with(deps, env, info, recipient, lsd_amount),
+        ExecuteMsg::Mint { recipient, amount } => execute_mint::<T>(deps, env, info, recipient, amount),
+        ExecuteMsg::MintWith { recipient, lsd_amount } => execute_mint_with::<T>(deps, env, info, recipient, lsd_amount),
         ExecuteMsg::IncreaseAllowance {
             spender,
             amount,
@@ -111,7 +108,7 @@ pub fn execute(
             recipient,
             amount,
         } => execute_transfer_from(deps, env, info, owner, recipient, amount),
-        ExecuteMsg::BurnFrom { owner, amount } => execute_burn_from(deps, env, info, owner, amount),
+        ExecuteMsg::BurnFrom { owner, amount } => execute_burn_from::<T>(deps, env, info, owner, amount),
         ExecuteMsg::SendFrom {
             owner,
             contract,
@@ -127,41 +124,55 @@ pub fn execute(
             marketing,
         } => execute_update_marketing(deps, env, info, project, description, marketing),
         ExecuteMsg::UploadLogo(logo) => execute_upload_logo(deps, env, info, logo),
-        ExecuteMsg::Decompound { recipient } => execute_decompound(deps, env, info, recipient),
+        ExecuteMsg::Decompound { recipient } => execute_decompound::<T>(deps, env, info, recipient),
     }
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    cw20_query(deps, _env, msg)
+pub fn query<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+
+    // If the token info are queried, we also add the current wLSD exchange rate to it
+    match msg{
+        QueryMsg::TokenInfo {  } => {
+            let token_info = query_token_info(deps)?;
+            let mut state = WrapperState::default();
+            to_binary(&TokenInfoResponse{
+                name: token_info.name,
+                symbol: token_info.symbol,
+                decimals: token_info.decimals,
+                total_supply: token_info.total_supply,
+                exchange_rate: get_current_exchange_rate::<T>(deps, env, &mut state).map_err(|err| StdError::generic_err(err.to_string()))?
+            })
+        },
+        _ => cw20_query(deps, env, msg)
+    }
 }
 
-fn compute_accrued_rewards(deps: Deps, env: Env) -> Result<AccruedRewards, ContractError> {
+fn compute_accrued_rewards<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(deps: Deps, env: Env) -> Result<AccruedRewards, ContractError> {
 
     // In this function, we have to make sure the token has a 1 exchange rate to Luna.
-    let mut state = read_wrapper_state(deps.storage)?;
-    let current_exchange_rate = get_current_exchange_rate(deps, env, &mut state)?;
+    let mut state = WrapperState::default();
+    let current_exchange_rate = get_current_exchange_rate::<T>(deps, env, &mut state)?;
 
-    // If the current exchange rate is lower than 1, we have just had a slashing event TODO
+    // If the current exchange rate is lower than the previous one, we have just had a slashing event or something else
+    // We can't decompound and we can't recompound 
     if current_exchange_rate < Decimal::one() {
-        // An error, ok, what ?
-        // We execute hub slashing ?
+        // There is no accrued rewards to decompound.
         return Err(ContractError::Std(StdError::generic_err(
-            "Need to execute slashing",
+            "No rewards to decompound",
         )));
     }
     // Else , we have some available rewards to decompound
-    let mut luna_rewards = state.prev_backing_luna * Uint128::one() - state.prev_wlsd_supply;
+    let mut luna_rewards = state.backing_luna * Uint128::one() - state.wlsd_supply;
 
-    let mut rewards_to_decompound = (Decimal::from_ratio(state.prev_lsd_balance, 1u128)
-        - (Decimal::from_ratio(state.prev_wlsd_supply, 1u128) / state.prev_lsd_exchange_rate))
+    let mut rewards_to_decompound = (Decimal::from_ratio(state.lsd_balance, 1u128)
+        - (Decimal::from_ratio(state.wlsd_supply, 1u128) / state.lsd_exchange_rate))
             * Uint128::one();
 
     // We substract 1 to the rewards to decompound so that we don't screw up the underlying value of the wrapper token
     // The underlying value should be if possible always above 1 luna per wrapper token (slashing events should happen as little often as possible)
     if rewards_to_decompound > Uint128::zero(){
         rewards_to_decompound -= Uint128::one();
-        luna_rewards -= state.prev_lsd_exchange_rate * Uint128::one();
+        luna_rewards -= state.lsd_exchange_rate * Uint128::one();
     }
 
     Ok(AccruedRewards {
@@ -185,7 +196,7 @@ rtd = (b - wlsd/exchange_rate);
 
 */
 
-pub fn execute_decompound(
+pub fn execute_decompound<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -204,8 +215,8 @@ pub fn execute_decompound(
 
 
     let lsd_contract = read_lsd_contract(deps.storage)?;
-    let slashing_error = ContractError::Std(StdError::generic_err("Need to execute slashing"));
-    let (out_messages, accrued_rewards) = match compute_accrued_rewards(deps.as_ref(), env) {
+    let slashing_error = ContractError::Std(StdError::generic_err("No rewards to decompound"));
+    let (out_messages, accrued_rewards) = match compute_accrued_rewards::<T>(deps.as_ref(), env) {
         Err(err) => {
             if err == slashing_error {
                 Ok((vec![], AccruedRewards::default()))
@@ -245,6 +256,6 @@ pub fn execute_decompound(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
-    Err(StdError::GenericErr { msg: "No Migrate Implemented".to_string() })
-    //Ok(Response::default())
+    //Err(StdError::GenericErr { msg: "No Migrate Implemented".to_string() })
+    Ok(Response::default())
 }

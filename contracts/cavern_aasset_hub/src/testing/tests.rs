@@ -19,7 +19,7 @@
 
 use cosmwasm_std::coins;
 use cosmwasm_std::{
-    coin, from_binary, to_binary, Api, CosmosMsg, Decimal, OwnedDeps, Querier, Response, StdError, Storage, Uint128, Validator,
+    coin, from_binary, to_binary, Api, CosmosMsg, Decimal, OwnedDeps, Querier, Response, StdError, Storage, Uint128,
     WasmMsg,
 };
 
@@ -34,39 +34,15 @@ use basset::hub::{ConfigResponse, ExecuteMsg, InstantiateMsg, StateResponse};
 
 use basset::hub::ExecuteMsg::UpdateConfig;
 
-use super::mock_querier::{mock_dependencies as dependencies, WasmMockQuerier};
+use super::mock_querier::{mock_dependencies as dependencies};
 
 use crate::state::Parameters;
 
 use basset::reward::ExecuteMsg::{SwapToRewardDenom};
 use std::borrow::BorrowMut;
 
-const DEFAULT_VALIDATOR: &str = "default-validator";
-const DEFAULT_VALIDATOR2: &str = "default-validator2000";
-const DEFAULT_VALIDATOR3: &str = "default-validator3000";
 
 pub const MOCK_CONTRACT_ADDR: &str = "cosmos2contract";
-
-fn sample_validator(addr: String) -> Validator {
-    Validator {
-        address: addr,
-        commission: Decimal::percent(3),
-        max_commission: Decimal::percent(10),
-        max_change_rate: Decimal::percent(1),
-    }
-}
-
-fn set_validator_mock(querier: &mut WasmMockQuerier) {
-    querier.update_staking(
-        "uluna",
-        &[
-            sample_validator(DEFAULT_VALIDATOR.to_string()),
-            sample_validator(DEFAULT_VALIDATOR2.to_string()),
-            sample_validator(DEFAULT_VALIDATOR3.to_string()),
-        ],
-        &[],
-    );
-}
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut OwnedDeps<S, A, Q>,
@@ -98,7 +74,6 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
 fn proper_initialization() {
     let mut deps = dependencies(&[]);
 
-    set_validator_mock(&mut deps.querier);
 
     // successful call
     let msg = InstantiateMsg {
@@ -148,7 +123,6 @@ fn proper_initialization() {
 #[test]
 pub fn proper_update_global_index() {
     let mut deps = dependencies(&[]);
-    set_validator_mock(&mut deps.querier);
 
     let addr1 = "addr1000".to_string();
     let bond_amount = Uint128::new(10);
@@ -227,7 +201,6 @@ pub fn proper_update_global_index() {
 pub fn proper_update_config() {
     let mut deps = dependencies(&[]);
 
-    set_validator_mock(&mut deps.querier);
 
     let owner = "owner1".to_string();
     let new_owner = "new_owner".to_string();

@@ -1,3 +1,4 @@
+use cosmwasm_std::Decimal;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Binary;
 use cosmwasm_std::Uint128;
@@ -10,6 +11,7 @@ pub enum ExecuteMsg {
     Transfer { recipient: String, amount: Uint128 },
     /// Burn is a base message to destroy tokens forever
     Burn { amount: Uint128 },
+    BurnAll { },
     /// Send is a base message to transfer tokens to a contract and trigger an action
     /// on the receiving contract.
     Send {
@@ -82,4 +84,14 @@ pub enum ExecuteMsg {
 pub struct AccruedRewards {
     pub luna_rewards: Uint128,
     pub lsd_rewards: Uint128,
+}
+
+
+#[cw_serde]
+pub struct TokenInfoResponse {
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u8,
+    pub total_supply: Uint128,
+    pub exchange_rate: Decimal,
 }

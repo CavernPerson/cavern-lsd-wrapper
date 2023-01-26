@@ -1,3 +1,4 @@
+use cosmwasm_std::Addr;
 use cosmwasm_std::StdError;
 
 #[cfg(not(feature = "library"))]
@@ -13,7 +14,7 @@ use cosmwasm_std::{
 };
 
 use basset::reward::{
-    ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg
+    ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg
 };
 
 
@@ -29,6 +30,8 @@ pub fn instantiate(
         hub_contract: deps.api.addr_validate(&msg.hub_contract)?,
         custody_contract: None,
         reward_denom: msg.reward_denom,
+
+        known_cw20_tokens: msg.known_tokens.iter().map(|addr| deps.api.addr_validate(addr)).collect::<StdResult<Vec<Addr>>>()?
     };
 
     store_config(deps.storage, &conf)?;
@@ -58,8 +61,8 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
     match msg {
         ExecuteMsg::ClaimRewards { recipient } => execute_claim_rewards(deps, env, info, recipient),
         ExecuteMsg::SwapToRewardDenom {} => execute_swap(deps, env, info),
-        ExecuteMsg::SetCustodyContract { custody_contract } => {
-            set_custody_contract(deps, info, custody_contract)
+        ExecuteMsg::UpdateConfig { custody_contract, known_tokens } => {
+            set_custody_contract(deps, info, custody_contract, known_tokens)
         }
     }
 }
@@ -67,7 +70,8 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
 pub fn set_custody_contract(
     deps: DepsMut,
     info: MessageInfo,
-    custody_contract: String,
+    custody_contract: Option<String>,
+    known_tokens: Option<Vec<String>>
 ) -> StdResult<Response> {
     let mut config = read_config(deps.storage)?;
 
@@ -75,11 +79,14 @@ pub fn set_custody_contract(
         return Err(StdError::generic_err("unauthorized"));
     }
 
-    if config.custody_contract.is_some() {
-        return Err(StdError::generic_err("unauthorized"));
+    if let Some(custody_contract) = custody_contract{
+        config.custody_contract = Some(deps.api.addr_validate(&custody_contract)?);
     }
 
-    config.custody_contract = Some(deps.api.addr_validate(&custody_contract)?);
+    if let Some(known_tokens) = known_tokens{
+        config.known_cw20_tokens = known_tokens.iter().map(|token| deps.api.addr_validate(token)).collect::<StdResult<Vec<Addr>>>()?
+    }
+
     store_config(deps.storage, &config)?;
 
     Ok(Response::new().add_attribute("action", "set_custody_contract"))
@@ -95,12 +102,9 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
+fn query_config(deps: Deps) -> StdResult<Config> {
     let config: Config = read_config(deps.storage)?;
-    Ok(ConfigResponse {
-        hub_contract: config.hub_contract.to_string(),
-        reward_denom: config.reward_denom,
-    })
+    Ok(config)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

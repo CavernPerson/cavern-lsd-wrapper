@@ -7,7 +7,6 @@ use cw_storage_plus::Item;
 
 pub const HUB_CONTRACT_KEY: Item<Addr> = Item::new("\u{0}\u{c}hub_contract");
 pub const LSD_CONTRACT_KEY: Item<LsdContracts> = Item::new("\u{0}\u{c}lsd_contract");
-pub const WRAPPER_STATE_KEY: Item<WrapperState> = Item::new("\u{0}\u{c}wraper_state");
 
 #[cw_serde]
 pub struct LsdContracts{
@@ -35,24 +34,14 @@ pub fn store_lsd_contract(storage: &mut dyn Storage, lsd_contracts: &LsdContract
 }
 
 #[cw_serde]
+#[derive(Default)]
 pub struct WrapperState {
-    pub prev_lsd_exchange_rate: Decimal,
-    pub prev_wlsd_supply: Uint128,
-    pub prev_backing_luna: Decimal,
-    pub prev_lsd_balance: Uint128,
+    pub lsd_exchange_rate: Decimal,
+    pub wlsd_supply: Uint128,
+    pub backing_luna: Decimal,
+    pub lsd_balance: Uint128,
 }
 
-// meta is the token definition as well as the total_supply
-pub fn read_wrapper_state(storage: &dyn Storage) -> StdResult<WrapperState> {
-    WRAPPER_STATE_KEY.load(storage)
-}
-
-pub fn store_wrapper_state(
-    storage: &mut dyn Storage,
-    wrapper_state: &WrapperState,
-) -> StdResult<()> {
-    WRAPPER_STATE_KEY.save(storage, wrapper_state)
-}
 
 #[cfg(test)]
 mod test {

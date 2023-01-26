@@ -29,11 +29,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "anchor_aasset_hub"
+name = "amp_luna-token"
 version = "1.0.0"
 dependencies = [
  "basset",
  "cavern-lsd-wrapper-token",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "schemars",
+ "serde",
+ "snafu",
+]
+
+[[package]]
+name = "anchor_aasset_hub"
+version = "1.0.0"
+dependencies = [
+ "basset",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",

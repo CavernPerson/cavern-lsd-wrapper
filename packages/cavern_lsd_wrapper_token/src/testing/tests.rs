@@ -84,7 +84,7 @@ pub fn do_mint(deps: DepsMut, addr: String, amount: Uint128, exchange_rate: Deci
     };
     let minter = "any_person_really";
     let info = mock_info(minter, &[]);
-    let res = execute(deps, mock_env(), info, msg).unwrap();
+    let res = execute::<LSDStateResponse>(deps, mock_env(), info, msg).unwrap();
     assert_eq!(1, res.messages.len());
 
     assert_eq!(res.messages, vec![
@@ -161,7 +161,7 @@ fn transfer() {
         amount: Uint128::new(1u128),
     };
 
-    let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let _res = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 }
 
 #[test]
@@ -185,7 +185,7 @@ fn transfer_from() {
         amount: Uint128::new(1u128),
         expires: None,
     };
-    let _ = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let _ = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let info = mock_info(addr3.as_str(), &[]);
     let msg = ExecuteMsg::TransferFrom {
@@ -194,7 +194,7 @@ fn transfer_from() {
         amount: Uint128::new(1u128),
     };
 
-    let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let _res = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 }
 
 #[test]
@@ -214,7 +214,7 @@ fn mint() {
         amount: Uint128::new(1u128),
     };
 
-    let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let _res = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 }
 
 #[test]
@@ -234,7 +234,7 @@ fn mint_multiple_exchange_rates() {
         amount: Uint128::new(1u128),
     };
 
-    let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let _res = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 
 
     // Now, we mint again with the same exchange rate by checking that it minted the right amount of tokens
@@ -275,7 +275,7 @@ fn burn() {
         amount: Uint128::new(1234u128),
     };
 
-    let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let res = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // When you burn, you should get your lsd token back
     assert_eq!(res.messages, vec![
@@ -310,7 +310,7 @@ fn burn_from() {
         amount: Uint128::new(1234u128),
         expires: None,
     };
-    let _ = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let _ = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let info = mock_info(addr1.as_str(), &[]);
     let msg = ExecuteMsg::BurnFrom {
@@ -318,7 +318,7 @@ fn burn_from() {
         amount: Uint128::new(1234u128),
     };
 
-    let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let res = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // When you burn, you should get your lsd token back
     assert_eq!(res.messages, vec![
@@ -358,7 +358,7 @@ fn send() {
         msg: to_binary(&dummy_msg).unwrap(),
     };
 
-    let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let res = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
     assert_eq!(res.messages.len(), 1);
 
     assert_eq!(
@@ -394,7 +394,7 @@ fn send_from() {
         amount: Uint128::new(1u128),
         expires: None,
     };
-    let _ = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let _ = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let dummy_msg = ExecuteMsg::Transfer {
         recipient: addr1.clone(),
@@ -409,7 +409,7 @@ fn send_from() {
         msg: to_binary(&dummy_msg).unwrap(),
     };
 
-    let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let res = execute::<LSDStateResponse>(deps.as_mut(), mock_env(), info, msg).unwrap();
     assert_eq!(res.messages.len(), 1);
 
     assert_eq!(

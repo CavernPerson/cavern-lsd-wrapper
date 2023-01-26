@@ -1,3 +1,6 @@
+
+
+
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Coin;
 use cosmwasm_std::Decimal;
@@ -19,3 +22,14 @@ pub struct LSDStateResponse {
     /// Staking rewards currently held by the contract that are ready to be reinvested
     pub unlocked_coins: Vec<Coin>,
 }
+
+pub trait LSDStateResponseTrait{
+    fn exchange_rate(&self) -> Decimal;
+}
+
+impl LSDStateResponseTrait for LSDStateResponse{
+    fn exchange_rate(&self) -> Decimal {
+        self.exchange_rate
+    }
+}
+

@@ -17,15 +17,16 @@
 //!      });
 //! 4. Anywhere you see query(deps.as_ref(), mock_env(),...) you must replace it with query(&mut deps, ...)
 
-use std::io::Stderr;
 
+
+use basset::dex_router::AssetInfo;
 use cosmwasm_std::{coins, StdError};
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{from_binary, BankMsg, Coin, CosmosMsg, SubMsg, Uint128};
 
 use crate::contract::{execute, instantiate, migrate, query};
 
-use crate::swap::create_swap_msgs;
+use crate::swap::{create_swap_msgs, Asset};
 use crate::testing::mock_querier::{mock_dependencies, MOCK_HUB_CONTRACT_ADDR};
 use basset::reward::{
     ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
@@ -40,6 +41,8 @@ fn default_init() -> InstantiateMsg {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     }
 }
 
@@ -105,9 +108,11 @@ pub fn swap_to_reward_denom() {
                 create_swap_msgs(
                     deps.as_ref(),
                     mock_env(),
-                    Coin {
-                        denom: "ukrw".to_string(),
+                    Asset{
                         amount: Uint128::new(1000u128),
+                        asset_info: AssetInfo::NativeToken{
+                            denom:  "ukrw".to_string(),
+                        }
                     },
                     DEFAULT_REWARD_DENOM.to_string()
                 )
@@ -118,9 +123,11 @@ pub fn swap_to_reward_denom() {
                 create_swap_msgs(
                     deps.as_ref(),
                     mock_env(),
-                    Coin {
-                        denom: "usdr".to_string(),
-                        amount: Uint128::new(50u128)
+                    Asset{
+                        amount: Uint128::new(50u128),
+                        asset_info: AssetInfo::NativeToken{
+                            denom:  "usdr".to_string(),
+                        }
                     },
                     DEFAULT_REWARD_DENOM.to_string()
                 )
@@ -131,9 +138,11 @@ pub fn swap_to_reward_denom() {
                 create_swap_msgs(
                     deps.as_ref(),
                     mock_env(),
-                    Coin {
-                        denom: "uinr".to_string(),
-                        amount: Uint128::new(50u128)
+                    Asset{
+                        amount: Uint128::new(50u128),
+                        asset_info: AssetInfo::NativeToken{
+                            denom:  "uinr".to_string(),
+                        }
                     },
                     DEFAULT_REWARD_DENOM.to_string()
                 )
@@ -162,8 +171,9 @@ fn claim_rewards() {
 
     // claimed_rewards = 100, total_balance = 100
     // global_index == 1
-    execute(deps.as_mut(), mock_env(), mock_info("addr0000", &[]), ExecuteMsg::SetCustodyContract{
-        custody_contract: "custody".to_string()
+    execute(deps.as_mut(), mock_env(), mock_info("addr0000", &[]), ExecuteMsg::UpdateConfig{
+        custody_contract: Some("custody".to_string()),
+        known_tokens: None
     }).unwrap();
 
 
@@ -216,8 +226,9 @@ fn claim_rewards_with_decimals() {
     // global_index ==
 
     // Setting the custody contract
-    execute(deps.as_mut(), mock_env(), mock_info("addr0000", &[]), ExecuteMsg::SetCustodyContract{
-        custody_contract: "custody".to_string()
+    execute(deps.as_mut(), mock_env(), mock_info("addr0000", &[]), ExecuteMsg::UpdateConfig {
+        custody_contract: Some("custody".to_string()),
+        known_tokens: None
     }).unwrap();
 
     let msg = ExecuteMsg::ClaimRewards { recipient: Some("addr0000".to_string()) };
