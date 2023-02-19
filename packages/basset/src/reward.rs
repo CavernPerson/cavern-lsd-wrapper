@@ -27,7 +27,8 @@ pub enum ExecuteMsg {
     /// Updates the contract config
     UpdateConfig { 
         custody_contract: Option<String>,
-        known_tokens: Option<Vec<String>>
+        known_tokens: Option<Vec<String>>,
+        owner: Option<String>
     },
     ////////////////////
     /// User's operations
