@@ -174,6 +174,7 @@ fn claim_rewards() {
         ExecuteMsg::UpdateConfig {
             custody_contract: Some("custody".to_string()),
             known_tokens: None,
+            reward_denom: None,
             owner: None,
         },
     )
@@ -232,6 +233,7 @@ fn claim_rewards_with_decimals() {
         ExecuteMsg::UpdateConfig {
             custody_contract: Some("custody".to_string()),
             known_tokens: None,
+            reward_denom: None,
             owner: None,
         },
     )
