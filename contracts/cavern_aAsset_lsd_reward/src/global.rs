@@ -2,12 +2,10 @@ use crate::querier::query_all_cw20_balances;
 use crate::swap::Asset;
 use cosmwasm_std::Coin;
 
-use crate::state::{read_config};
+use crate::state::read_config;
 
-use cosmwasm_std::{
-    attr, CosmosMsg, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
-};
-use basset::dex_router::{AssetInfo};
+use basset::dex_router::AssetInfo;
+use cosmwasm_std::{attr, CosmosMsg, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
 
 use crate::swap::create_swap_msgs;
 
@@ -28,41 +26,19 @@ pub fn execute_swap(deps: DepsMut, env: Env, info: MessageInfo) -> StdResult<Res
     let balances = deps.querier.query_all_balances(contr_addr)?;
 
     let reward_denom = config.reward_denom.clone();
-    
-    let  native_swap_messages: Vec<CosmosMsg> = balances
+
+    let native_swap_messages: Vec<CosmosMsg> = balances
         .iter()
         .filter(|x| reward_denom.clone() != x.denom)
         .map(|coin: &Coin| {
             create_swap_msgs(
                 deps.as_ref(),
                 env.clone(),
-                Asset{
-                    asset_info: AssetInfo::NativeToken{
-                        denom: coin.denom.clone()
+                Asset {
+                    asset_info: AssetInfo::NativeToken {
+                        denom: coin.denom.clone(),
                     },
-                    amount: coin.amount
-                },
-                config.reward_denom.clone(),
-            )
-        })
-        .flat_map(|result| match result {
-            Ok(vec) => vec.into_iter().map(Ok).collect(),
-            Err(er) => vec![Err(er)],
-        })
-        .collect::<StdResult<Vec<CosmosMsg>>>()?;
-    
-    // Then we want to swap all cw20 balances we know into the stable denom
-    let cw20_balances: Vec<Asset> = query_all_cw20_balances(deps.as_ref(), env.contract.address.clone(), &config.known_cw20_tokens)?;
-    let cw20_messages: Vec<CosmosMsg> = cw20_balances
-        .iter()
-        .filter(|asset| !asset.amount.is_zero())
-        .map(|asset: &Asset| {
-            create_swap_msgs(
-                deps.as_ref(),
-                env.clone(),
-                Asset{
-                    asset_info: asset.asset_info.clone(),
-                    amount: asset.amount
+                    amount: coin.amount,
                 },
                 config.reward_denom.clone(),
             )
@@ -73,6 +49,31 @@ pub fn execute_swap(deps: DepsMut, env: Env, info: MessageInfo) -> StdResult<Res
         })
         .collect::<StdResult<Vec<CosmosMsg>>>()?;
 
+    // Then we want to swap all cw20 balances we know into the stable denom
+    let cw20_balances: Vec<Asset> = query_all_cw20_balances(
+        deps.as_ref(),
+        env.contract.address.clone(),
+        &config.known_cw20_tokens,
+    )?;
+    let cw20_messages: Vec<CosmosMsg> = cw20_balances
+        .iter()
+        .filter(|asset| !asset.amount.is_zero())
+        .map(|asset: &Asset| {
+            create_swap_msgs(
+                deps.as_ref(),
+                env.clone(),
+                Asset {
+                    asset_info: asset.asset_info.clone(),
+                    amount: asset.amount,
+                },
+                config.reward_denom.clone(),
+            )
+        })
+        .flat_map(|result| match result {
+            Ok(vec) => vec.into_iter().map(Ok).collect(),
+            Err(er) => vec![Err(er)],
+        })
+        .collect::<StdResult<Vec<CosmosMsg>>>()?;
 
     let res = Response::new()
         .add_messages(native_swap_messages)

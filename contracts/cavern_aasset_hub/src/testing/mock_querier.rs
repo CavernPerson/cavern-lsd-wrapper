@@ -3,8 +3,8 @@ use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage};
 use cosmwasm_std::Empty;
 use cosmwasm_std::{
     from_binary, from_slice, to_binary, AllBalanceResponse, Api, BalanceResponse, BankQuery,
-    CanonicalAddr, Coin, ContractResult, Decimal, OwnedDeps, Querier,
-    QuerierResult, QueryRequest, SystemError, SystemResult, Uint128, WasmQuery,
+    CanonicalAddr, Coin, ContractResult, Decimal, OwnedDeps, Querier, QuerierResult, QueryRequest,
+    SystemError, SystemResult, Uint128, WasmQuery,
 };
 use cosmwasm_storage::to_length_prefixed;
 use cw20::TokenInfoResponse;

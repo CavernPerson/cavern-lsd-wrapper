@@ -1,8 +1,6 @@
 use crate::state::CONFIG;
 use basset::hub::Config;
-use cosmwasm_std::{
-    attr, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
-};
+use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
 
 /// Update the config. Update the owner, reward and token contracts.
 /// Only creator/owner is allowed to execute
@@ -47,6 +45,5 @@ pub fn execute_update_config(
         })?;
     }
 
-    Ok(Response::new()
-        .add_attributes(vec![attr("action", "update_config")]))
+    Ok(Response::new().add_attributes(vec![attr("action", "update_config")]))
 }

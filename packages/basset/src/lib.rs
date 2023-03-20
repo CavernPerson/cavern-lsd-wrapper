@@ -8,5 +8,8 @@ pub mod hub;
 pub mod reward;
 pub mod wrapper;
 
+pub mod oracle;
+pub mod price_querier;
+
 #[cfg(test)]
 mod testing;

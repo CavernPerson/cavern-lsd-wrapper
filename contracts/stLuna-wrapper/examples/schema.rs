@@ -1,9 +1,9 @@
 use std::env::current_dir;
 use std::fs::create_dir_all;
+use wrapper_implementations::steak::SteakInitMsg;
 
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
-use cavern_coin_lsd_wrapper_token::msg::TokenInitMsg;
 use cw20::{
     AllAccountsResponse, AllAllowancesResponse, AllowanceResponse, BalanceResponse,
     TokenInfoResponse,
@@ -16,7 +16,7 @@ fn main() {
     create_dir_all(&out_dir).unwrap();
     remove_schemas(&out_dir).unwrap();
 
-    export_schema(&schema_for!(TokenInitMsg), &out_dir);
+    export_schema(&schema_for!(SteakInitMsg), &out_dir);
     export_schema(&schema_for!(ExecuteMsg), &out_dir);
     export_schema(&schema_for!(QueryMsg), &out_dir);
     export_schema(&schema_for!(AllowanceResponse), &out_dir);

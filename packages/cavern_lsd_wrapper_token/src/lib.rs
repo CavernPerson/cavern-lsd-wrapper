@@ -1,9 +1,6 @@
 pub mod contract;
-pub mod msg;
-pub mod state;
-
 mod handler;
+pub mod msg;
 mod querier;
-
-#[cfg(test)]
-mod testing;
+pub mod state;
+pub mod trait_def;

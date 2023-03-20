@@ -11,7 +11,7 @@ pub struct InstantiateMsg {
     pub phoenix_addr: String,
     pub terraswap_addr: String,
     // Known tokens to swap from to the stable_token
-    pub known_tokens: Vec<String>
+    pub known_tokens: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -25,10 +25,11 @@ pub enum ExecuteMsg {
     SwapToRewardDenom {},
 
     /// Updates the contract config
-    UpdateConfig { 
+    UpdateConfig {
         custody_contract: Option<String>,
         known_tokens: Option<Vec<String>>,
-        owner: Option<String>
+        reward_denom: Option<String>,
+        owner: Option<String>,
     },
     ////////////////////
     /// User's operations

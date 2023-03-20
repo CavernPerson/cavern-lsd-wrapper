@@ -36,6 +36,7 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 snafu = { version = "0.6.3" }
 basset = { path = "../../packages/basset", default-features = false, version = "1.1.0"}
 cavern-lsd-wrapper-token = { path = "../../packages/cavern_lsd_wrapper_token", default-features = false, version = "1.0.0"}
+wrapper-implementations = { path = "../../packages/wrapper_implementations", default-features = false, version = "1.0.0"}
 
 [dev-dependencies]
 # we only need to enable this if we use integration tests

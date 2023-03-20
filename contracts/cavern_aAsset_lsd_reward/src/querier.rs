@@ -1,14 +1,12 @@
-
-
-use cw20::BalanceResponse;
-use std::convert::TryInto;
+use crate::swap::Asset;
 use basset::dex_router::AssetInfo;
+use cosmwasm_std::to_binary;
+use cosmwasm_std::Deps;
 use cosmwasm_std::QueryRequest;
 use cosmwasm_std::WasmQuery;
-use cosmwasm_std::to_binary;
+use cw20::BalanceResponse;
 use cw20::Cw20QueryMsg;
-use crate::swap::Asset;
-use cosmwasm_std::Deps;
+use std::convert::TryInto;
 
 use cosmwasm_std::Addr;
 
@@ -32,26 +30,35 @@ pub fn query_token_balance(
                 address: account_addr.to_string(),
             })?,
         }))
-        .unwrap_or_else(|_| BalanceResponse{
-            balance: Uint128::zero()
+        .unwrap_or_else(|_| BalanceResponse {
+            balance: Uint128::zero(),
         });
 
     Ok(balance_response.balance.into())
 }
-pub fn query_all_cw20_balances(deps: Deps, contract_addr: Addr, tokens: &[Addr]) -> StdResult<Vec<Asset>>{
-
-    tokens.iter().map(|token|{
-        let result = query_token_balance(deps, token.clone(), contract_addr.clone());
-        let asset_info = AssetInfo::Token { contract_addr: token.clone() };
-        result.map(|amount| Asset{
-            amount: amount.try_into().unwrap(),
-            asset_info: asset_info.clone(),
-        }).or_else(|_| {
-            Ok(Asset{
-            amount: Uint128::zero(),
-            asset_info: asset_info.clone(),
-        }
-        )})
-    })
-    .collect()
+pub fn query_all_cw20_balances(
+    deps: Deps,
+    contract_addr: Addr,
+    tokens: &[Addr],
+) -> StdResult<Vec<Asset>> {
+    tokens
+        .iter()
+        .map(|token| {
+            let result = query_token_balance(deps, token.clone(), contract_addr.clone());
+            let asset_info = AssetInfo::Token {
+                contract_addr: token.clone(),
+            };
+            result
+                .map(|amount| Asset {
+                    amount: amount.try_into().unwrap(),
+                    asset_info: asset_info.clone(),
+                })
+                .or_else(|_| {
+                    Ok(Asset {
+                        amount: Uint128::zero(),
+                        asset_info: asset_info.clone(),
+                    })
+                })
+        })
+        .collect()
 }

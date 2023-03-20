@@ -4,7 +4,7 @@ use cosmwasm_std::StdError;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
-use crate::global::{execute_swap};
+use crate::global::execute_swap;
 use crate::state::{
     read_config, store_config, store_state, Config, State, SwapConfig, SWAP_CONFIG,
 };
@@ -13,10 +13,7 @@ use cosmwasm_std::{
     to_binary, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
 };
 
-use basset::reward::{
-    ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg
-};
-
+use basset::reward::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -31,7 +28,11 @@ pub fn instantiate(
         custody_contract: None,
         reward_denom: msg.reward_denom,
 
-        known_cw20_tokens: msg.known_tokens.iter().map(|addr| deps.api.addr_validate(addr)).collect::<StdResult<Vec<Addr>>>()?
+        known_cw20_tokens: msg
+            .known_tokens
+            .iter()
+            .map(|addr| deps.api.addr_validate(addr))
+            .collect::<StdResult<Vec<Addr>>>()?,
     };
 
     store_config(deps.storage, &conf)?;
@@ -61,18 +62,22 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
     match msg {
         ExecuteMsg::ClaimRewards { recipient } => execute_claim_rewards(deps, env, info, recipient),
         ExecuteMsg::SwapToRewardDenom {} => execute_swap(deps, env, info),
-        ExecuteMsg::UpdateConfig { custody_contract, known_tokens, owner } => {
-            set_custody_contract(deps, info, custody_contract, known_tokens, owner)
-        }
+        ExecuteMsg::UpdateConfig {
+            custody_contract,
+            known_tokens,
+            reward_denom,
+            owner,
+        } => update_config(deps, info, custody_contract, known_tokens, reward_denom, owner),
     }
 }
 
-pub fn set_custody_contract(
+pub fn update_config(
     deps: DepsMut,
     info: MessageInfo,
     custody_contract: Option<String>,
     known_tokens: Option<Vec<String>>,
     owner: Option<String>,
+    reward_denom: Option<String>
 ) -> StdResult<Response> {
     let mut config = read_config(deps.storage)?;
 
@@ -80,15 +85,22 @@ pub fn set_custody_contract(
         return Err(StdError::generic_err("unauthorized"));
     }
 
-    if let Some(custody_contract) = custody_contract{
+    if let Some(custody_contract) = custody_contract {
         config.custody_contract = Some(deps.api.addr_validate(&custody_contract)?);
     }
 
-    if let Some(known_tokens) = known_tokens{
-        config.known_cw20_tokens = known_tokens.iter().map(|token| deps.api.addr_validate(token)).collect::<StdResult<Vec<Addr>>>()?
+    if let Some(known_tokens) = known_tokens {
+        config.known_cw20_tokens = known_tokens
+            .iter()
+            .map(|token| deps.api.addr_validate(token))
+            .collect::<StdResult<Vec<Addr>>>()?
     }
 
-    if let Some(owner) = owner{
+    if let Some(reward_denom) = reward_denom {
+        config.reward_denom = reward_denom
+    }
+
+    if let Some(owner) = owner {
         config.owner = deps.api.addr_validate(&owner)?;
     }
 

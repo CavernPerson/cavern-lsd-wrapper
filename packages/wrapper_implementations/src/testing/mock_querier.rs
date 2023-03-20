@@ -1,18 +1,21 @@
 use basset::external::{LSDQueryMsg, LSDStateResponse};
-
+use basset::oracle::PriceResponse;
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    from_slice, to_binary, Coin, ContractResult, Empty, OwnedDeps, Querier, QuerierResult,
-    QueryRequest, SystemError, SystemResult, WasmQuery, from_binary,
+    from_binary, from_slice, to_binary, Coin, ContractResult, Decimal256, Empty, OwnedDeps,
+    Querier, QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery,
 };
 
+use basset::oracle::QueryMsg as OracleQueryMsg;
 use std::marker::PhantomData;
-
 
 pub const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
 
 pub const MOCK_LSD_HUB_CONTRACT_ADDR: &str = "lsd";
 pub const MOCK_LSD_TOKEN_CONTRACT_ADDR: &str = "lsd_token";
+pub const MOCK_ORACLE_CONTRACT_ADDR: &str = "oracle";
+pub const MOCK_LSD_DENOM: &str = "stluna";
+pub const MOCK_LSD_UNDERLYING_DENOM: &str = "uluna";
 
 pub fn mock_dependencies(
     contract_balance: &[Coin],
@@ -32,20 +35,32 @@ pub fn mock_dependencies(
 pub struct WasmMockQuerier {
     base: MockQuerier<Empty>,
     lsd_state_querier: LsdStateQuerier,
+    oracle_price_querier: OraclePriceQuerier,
 }
-
 
 #[derive(Clone)]
 pub struct LsdStateQuerier {
     // this lets us iterate over all pairs that match the first string
-    lsd_state: Option<LSDStateResponse>
+    lsd_state: Option<LSDStateResponse>,
 }
 
 impl LsdStateQuerier {
     pub fn new(lsd_state: LSDStateResponse) -> Self {
         LsdStateQuerier {
-            lsd_state: Some(lsd_state)
+            lsd_state: Some(lsd_state),
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct OraclePriceQuerier {
+    // this lets us iterate over all pairs that match the first string
+    price: Option<Decimal256>,
+}
+
+impl OraclePriceQuerier {
+    pub fn new(price: Decimal256) -> Self {
+        OraclePriceQuerier { price: Some(price) }
     }
 }
 
@@ -71,18 +86,35 @@ impl WasmMockQuerier {
             QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => {
                 if *contract_addr == MOCK_LSD_HUB_CONTRACT_ADDR {
                     let lsd_message: LSDQueryMsg = from_binary(msg).unwrap();
-                    match lsd_message{
-                        LSDQueryMsg::State {  } => {
-                            let state_response = self.lsd_state_querier.lsd_state.clone().unwrap();          
+                    match lsd_message {
+                        LSDQueryMsg::State {} => {
+                            let state_response = self.lsd_state_querier.lsd_state.clone().unwrap();
                             SystemResult::Ok(ContractResult::from(to_binary(&state_response)))
                         }
-
                     }
-
-                }else{
+                } else if *contract_addr == MOCK_ORACLE_CONTRACT_ADDR {
+                    let oracle_message: OracleQueryMsg = from_binary(msg).unwrap();
+                    match oracle_message {
+                        OracleQueryMsg::Price { base, quote } => {
+                            if base != MOCK_LSD_DENOM || quote != MOCK_LSD_UNDERLYING_DENOM {
+                                return SystemResult::Err(SystemError::InvalidRequest {
+                                    error: format!("interpreting tokens"),
+                                    request: msg.clone(),
+                                });
+                            }
+                            let quote_response = PriceResponse {
+                                rate: self.oracle_price_querier.price.unwrap(),
+                                last_updated_base: 0,
+                                last_updated_quote: 0,
+                            };
+                            SystemResult::Ok(ContractResult::from(to_binary(&quote_response)))
+                        }
+                        _ => unimplemented!(),
+                    }
+                } else {
                     unimplemented!()
                 }
-            },
+            }
             _ => self.base.handle_query(request),
         }
     }
@@ -90,9 +122,10 @@ impl WasmMockQuerier {
 
 impl WasmMockQuerier {
     pub fn new(base: MockQuerier<Empty>) -> Self {
-        WasmMockQuerier { 
+        WasmMockQuerier {
             base,
-            lsd_state_querier: LsdStateQuerier { lsd_state: None }
+            lsd_state_querier: LsdStateQuerier { lsd_state: None },
+            oracle_price_querier: OraclePriceQuerier { price: None },
         }
     }
 
@@ -101,7 +134,8 @@ impl WasmMockQuerier {
         self.lsd_state_querier = LsdStateQuerier::new(lsd_state);
     }
 
-    pub fn query_lsd_state(&self) -> LSDStateResponse{
-        self.lsd_state_querier.lsd_state.clone().unwrap()
+    // configure the mint whitelist mock querier
+    pub fn with_oracle_price(&mut self, price: Decimal256) {
+        self.oracle_price_querier = OraclePriceQuerier::new(price);
     }
 }
