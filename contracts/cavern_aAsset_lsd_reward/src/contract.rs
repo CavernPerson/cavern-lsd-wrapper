@@ -76,8 +76,8 @@ pub fn update_config(
     info: MessageInfo,
     custody_contract: Option<String>,
     known_tokens: Option<Vec<String>>,
+    reward_denom: Option<String>,
     owner: Option<String>,
-    reward_denom: Option<String>
 ) -> StdResult<Response> {
     let mut config = read_config(deps.storage)?;
 
