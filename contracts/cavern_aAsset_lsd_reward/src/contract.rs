@@ -1,5 +1,6 @@
-use cosmwasm_std::Addr;
-use cosmwasm_std::StdError;
+use std::collections::HashSet;
+
+use cosmwasm_std::{Addr,StdError};
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -18,6 +19,11 @@ use basset::reward::{
 };
 
 
+fn has_unique_elements(list: &[String]) -> bool{
+    let mut uniq = HashSet::new();
+    list.iter().all(move |x| uniq.insert(x))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
@@ -25,6 +31,12 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
+
+    if !has_unique_elements(&msg.known_tokens){
+        return Err(StdError::generic_err("Known tokens shouldn't contain duplicate assets"));
+    }
+
+
     let conf = Config {
         owner: info.sender,
         hub_contract: deps.api.addr_validate(&msg.hub_contract)?,
