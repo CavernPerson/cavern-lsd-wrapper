@@ -70,6 +70,4 @@ pub struct HoldersResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct MigrateMsg {
-    pub reward_denom: Option<String>,
-}
+pub struct MigrateMsg {}

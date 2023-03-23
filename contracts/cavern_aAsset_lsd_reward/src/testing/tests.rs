@@ -254,9 +254,6 @@ fn test_migrate() {
         denom: "uusd".to_string(),
         amount: Uint128::new(100u128),
     }]);
-    instantiate(deps.as_mut(), mock_env(), mock_info("instantiator", &[]), default_init()).unwrap();
 
-    migrate(deps.as_mut(), mock_env(), MigrateMsg {
-        reward_denom: Some("uluna".to_string()),
-    }).unwrap();
+    migrate(deps.as_mut(), mock_env(), MigrateMsg {}).unwrap();
 }

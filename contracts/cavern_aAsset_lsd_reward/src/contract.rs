@@ -5,7 +5,6 @@ use cosmwasm_std::StdError;
 use cosmwasm_std::entry_point;
 
 use crate::global::{execute_swap};
-use crate::state::CONFIG;
 use crate::state::{
     read_config, store_config, store_state, Config, State, SwapConfig, SWAP_CONFIG,
 };
@@ -114,11 +113,6 @@ fn query_config(deps: Deps) -> StdResult<Config> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
-    let mut config = CONFIG.load(deps.storage)?;
-    if let Some(reward_denom) = msg.reward_denom{
-        config.reward_denom = reward_denom;
-        CONFIG.save(deps.storage, &config)?;
-    }
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
     Ok(Response::default())
 }
