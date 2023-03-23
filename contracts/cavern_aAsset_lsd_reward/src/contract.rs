@@ -61,8 +61,8 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
     match msg {
         ExecuteMsg::ClaimRewards { recipient } => execute_claim_rewards(deps, env, info, recipient),
         ExecuteMsg::SwapToRewardDenom {} => execute_swap(deps, env, info),
-        ExecuteMsg::UpdateConfig { custody_contract, known_tokens, owner } => {
-            set_custody_contract(deps, info, custody_contract, known_tokens, owner)
+        ExecuteMsg::UpdateConfig { custody_contract, known_tokens } => {
+            set_custody_contract(deps, info, custody_contract, known_tokens)
         }
     }
 }
@@ -71,8 +71,7 @@ pub fn set_custody_contract(
     deps: DepsMut,
     info: MessageInfo,
     custody_contract: Option<String>,
-    known_tokens: Option<Vec<String>>,
-    owner: Option<String>,
+    known_tokens: Option<Vec<String>>
 ) -> StdResult<Response> {
     let mut config = read_config(deps.storage)?;
 
@@ -86,10 +85,6 @@ pub fn set_custody_contract(
 
     if let Some(known_tokens) = known_tokens{
         config.known_cw20_tokens = known_tokens.iter().map(|token| deps.api.addr_validate(token)).collect::<StdResult<Vec<Addr>>>()?
-    }
-
-    if let Some(owner) = owner{
-        config.owner = deps.api.addr_validate(&owner)?;
     }
 
     store_config(deps.storage, &config)?;

@@ -173,8 +173,7 @@ fn claim_rewards() {
     // global_index == 1
     execute(deps.as_mut(), mock_env(), mock_info("addr0000", &[]), ExecuteMsg::UpdateConfig{
         custody_contract: Some("custody".to_string()),
-        known_tokens: None,
-        owner: None,
+        known_tokens: None
     }).unwrap();
 
 
@@ -229,8 +228,7 @@ fn claim_rewards_with_decimals() {
     // Setting the custody contract
     execute(deps.as_mut(), mock_env(), mock_info("addr0000", &[]), ExecuteMsg::UpdateConfig {
         custody_contract: Some("custody".to_string()),
-        known_tokens: None,
-        owner: None
+        known_tokens: None
     }).unwrap();
 
     let msg = ExecuteMsg::ClaimRewards { recipient: Some("addr0000".to_string()) };
