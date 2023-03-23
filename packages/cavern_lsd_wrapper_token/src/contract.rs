@@ -243,7 +243,7 @@ pub fn execute_decompound<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
 
     let res = Response::new()
         .add_attributes(vec![
-            attr("action", "claim_reward"),
+            attr("action", "execute_decompound"),
             attr(
                 "total_luna_rewards",
                 accrued_rewards.luna_rewards.to_string(),
