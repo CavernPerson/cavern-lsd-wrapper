@@ -16,8 +16,7 @@ pub fn execute_update_config(
 ) -> StdResult<Response> {
     // only owner must be able to send this message.
     let conf = CONFIG.load(deps.storage)?;
-    let sender_raw = deps.api.addr_validate(info.sender.as_str())?;
-    if sender_raw != conf.creator {
+    if info.sender != conf.creator {
         return Err(StdError::generic_err("unauthorized"));
     }
 

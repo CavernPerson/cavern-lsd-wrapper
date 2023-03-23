@@ -22,12 +22,10 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
-    let sender = info.sender.clone();
-    let _sndr_raw = deps.api.addr_validate(sender.as_str())?;
 
     // store config
     let data = Config {
-        creator: deps.api.addr_validate(info.sender.as_str())?,
+        creator: info.sender,
         reward_contract: None,
         token_contract: None,
     };
