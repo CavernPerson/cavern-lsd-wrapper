@@ -1,11 +1,11 @@
 use std::collections::HashSet;
 
-use cosmwasm_std::{Addr,StdError};
+use cosmwasm_std::{Addr, StdError};
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
-use crate::global::{execute_swap};
+use crate::global::execute_swap;
 use crate::state::{
     read_config, store_config, store_state, Config, State, SwapConfig, SWAP_CONFIG,
 };
@@ -14,12 +14,9 @@ use cosmwasm_std::{
     to_binary, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
 };
 
-use basset::reward::{
-    ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg
-};
+use basset::reward::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-
-fn has_unique_elements(list: &[String]) -> bool{
+fn has_unique_elements(list: &[String]) -> bool {
     let mut uniq = HashSet::new();
     list.iter().all(move |x| uniq.insert(x))
 }
@@ -31,11 +28,11 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
-
-    if !has_unique_elements(&msg.known_tokens){
-        return Err(StdError::generic_err("Known tokens shouldn't contain duplicate assets"));
+    if !has_unique_elements(&msg.known_tokens) {
+        return Err(StdError::generic_err(
+            "Known tokens shouldn't contain duplicate assets",
+        ));
     }
-
 
     let conf = Config {
         owner: info.sender,
@@ -43,7 +40,11 @@ pub fn instantiate(
         custody_contract: None,
         reward_denom: msg.reward_denom,
 
-        known_cw20_tokens: msg.known_tokens.iter().map(|addr| deps.api.addr_validate(addr)).collect::<StdResult<Vec<Addr>>>()?
+        known_cw20_tokens: msg
+            .known_tokens
+            .iter()
+            .map(|addr| deps.api.addr_validate(addr))
+            .collect::<StdResult<Vec<Addr>>>()?,
     };
 
     store_config(deps.storage, &conf)?;
@@ -73,9 +74,10 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
     match msg {
         ExecuteMsg::ClaimRewards { recipient } => execute_claim_rewards(deps, env, info, recipient),
         ExecuteMsg::SwapToRewardDenom {} => execute_swap(deps, env, info),
-        ExecuteMsg::UpdateConfig { custody_contract, known_tokens } => {
-            set_custody_contract(deps, info, custody_contract, known_tokens)
-        }
+        ExecuteMsg::UpdateConfig {
+            custody_contract,
+            known_tokens,
+        } => set_custody_contract(deps, info, custody_contract, known_tokens),
     }
 }
 
@@ -83,7 +85,7 @@ pub fn set_custody_contract(
     deps: DepsMut,
     info: MessageInfo,
     custody_contract: Option<String>,
-    known_tokens: Option<Vec<String>>
+    known_tokens: Option<Vec<String>>,
 ) -> StdResult<Response> {
     let mut config = read_config(deps.storage)?;
 
@@ -91,12 +93,15 @@ pub fn set_custody_contract(
         return Err(StdError::generic_err("unauthorized"));
     }
 
-    if let Some(custody_contract) = custody_contract{
+    if let Some(custody_contract) = custody_contract {
         config.custody_contract = Some(deps.api.addr_validate(&custody_contract)?);
     }
 
-    if let Some(known_tokens) = known_tokens{
-        config.known_cw20_tokens = known_tokens.iter().map(|token| deps.api.addr_validate(token)).collect::<StdResult<Vec<Addr>>>()?
+    if let Some(known_tokens) = known_tokens {
+        config.known_cw20_tokens = known_tokens
+            .iter()
+            .map(|token| deps.api.addr_validate(token))
+            .collect::<StdResult<Vec<Addr>>>()?
     }
 
     store_config(deps.storage, &config)?;

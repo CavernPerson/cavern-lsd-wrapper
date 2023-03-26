@@ -19,8 +19,8 @@
 
 use cosmwasm_std::coins;
 use cosmwasm_std::{
-    coin, from_binary, to_binary, Api, CosmosMsg, Decimal, OwnedDeps, Querier, Response, StdError, Storage, Uint128,
-    WasmMsg,
+    coin, from_binary, to_binary, Api, CosmosMsg, Decimal, OwnedDeps, Querier, Response, StdError,
+    Storage, Uint128, WasmMsg,
 };
 
 use schemars::JsonSchema;
@@ -34,13 +34,12 @@ use basset::hub::{ConfigResponse, ExecuteMsg, InstantiateMsg, StateResponse};
 
 use basset::hub::ExecuteMsg::UpdateConfig;
 
-use super::mock_querier::{mock_dependencies as dependencies};
+use super::mock_querier::mock_dependencies as dependencies;
 
 use crate::state::Parameters;
 
-use basset::reward::ExecuteMsg::{SwapToRewardDenom};
+use basset::reward::ExecuteMsg::SwapToRewardDenom;
 use std::borrow::BorrowMut;
-
 
 pub const MOCK_CONTRACT_ADDR: &str = "cosmos2contract";
 
@@ -73,7 +72,6 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
 #[test]
 fn proper_initialization() {
     let mut deps = dependencies(&[]);
-
 
     // successful call
     let msg = InstantiateMsg {
@@ -193,14 +191,12 @@ pub fn proper_update_global_index() {
         }
         _ => panic!("Unexpected message: {:?}", swap),
     }
-
 }
 
 /// Covers if the storage affected by update_config are updated properly
 #[test]
 pub fn proper_update_config() {
     let mut deps = dependencies(&[]);
-
 
     let owner = "owner1".to_string();
     let new_owner = "new_owner".to_string();
@@ -242,7 +238,6 @@ pub fn proper_update_config() {
     };
     let info = mock_info(&owner, &[]);
     let _res = execute(deps.as_mut(), mock_env(), info, update_config).unwrap();
-
 
     let update_config = UpdateConfig {
         owner: None,
@@ -294,7 +289,6 @@ pub fn proper_update_config() {
     let res = execute(deps.as_mut(), mock_env(), new_owner_info, update_config).unwrap();
     assert_eq!(res.messages.len(), 0);
 }
-
 
 // sample MIR claim msg
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

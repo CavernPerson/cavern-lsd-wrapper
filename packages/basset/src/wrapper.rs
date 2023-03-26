@@ -1,6 +1,6 @@
-use cosmwasm_std::Decimal;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Binary;
+use cosmwasm_std::Decimal;
 use cosmwasm_std::Uint128;
 use cw20::Expiration;
 use cw20::Logo;
@@ -8,10 +8,15 @@ use cw20::Logo;
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Transfer is a base message to move tokens to another account without triggering actions
-    Transfer { recipient: String, amount: Uint128 },
+    Transfer {
+        recipient: String,
+        amount: Uint128,
+    },
     /// Burn is a base message to destroy tokens forever
-    Burn { amount: Uint128 },
-    BurnAll { },
+    Burn {
+        amount: Uint128,
+    },
+    BurnAll {},
     /// Send is a base message to transfer tokens to a contract and trigger an action
     /// on the receiving contract.
     Send {
@@ -51,16 +56,27 @@ pub enum ExecuteMsg {
         msg: Binary,
     },
     /// Only with "approval" extension. Destroys tokens forever
-    BurnFrom { owner: String, amount: Uint128 },
+    BurnFrom {
+        owner: String,
+        amount: Uint128,
+    },
     /// Only with the "mintable" extension. If the contract can transfer enough lsd funds from the caller, creates amount new tokens
     /// and adds to the recipient balance.
-    Mint { recipient: String, amount: Uint128 },
+    Mint {
+        recipient: String,
+        amount: Uint128,
+    },
     /// Same as the Mint function but you specify the amount of funds you want to send to the contract instead
-    MintWith { recipient: String, lsd_amount: Uint128},
+    MintWith {
+        recipient: String,
+        lsd_amount: Uint128,
+    },
     /// Only with the "mintable" extension. The current minter may set
     /// a new minter. Setting the minter to None will remove the
     /// token's minter forever.
-    UpdateMinter { new_minter: Option<String> },
+    UpdateMinter {
+        new_minter: Option<String>,
+    },
     /// Only with the "marketing" extension. If authorized, updates marketing metadata.
     /// Setting None/null for any of these will leave it unchanged.
     /// Setting Some("") will clear this field on the contract storage
@@ -76,7 +92,9 @@ pub enum ExecuteMsg {
     UploadLogo(Logo),
 
     /// Wrapper specific message
-    Decompound { recipient: Option<String> },
+    Decompound {
+        recipient: Option<String>,
+    },
 }
 
 #[derive(Default)]
@@ -85,7 +103,6 @@ pub struct AccruedRewards {
     pub luna_rewards: Uint128,
     pub lsd_rewards: Uint128,
 }
-
 
 #[cw_serde]
 pub struct TokenInfoResponse {

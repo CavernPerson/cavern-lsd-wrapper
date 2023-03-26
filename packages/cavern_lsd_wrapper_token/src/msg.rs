@@ -1,4 +1,4 @@
-use cw20::{Cw20Coin};
+use cw20::Cw20Coin;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -8,7 +8,7 @@ pub struct TokenInitMsg {
     pub symbol: String,
     pub decimals: u8,
     pub initial_balances: Vec<Cw20Coin>,
-    
+
     // only hub contract can call decompound
     pub hub_contract: String,
 

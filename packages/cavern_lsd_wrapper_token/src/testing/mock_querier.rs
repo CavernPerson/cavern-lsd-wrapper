@@ -2,12 +2,11 @@ use basset::external::{LSDQueryMsg, LSDStateResponse};
 
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    from_slice, to_binary, Coin, ContractResult, Empty, OwnedDeps, Querier, QuerierResult,
-    QueryRequest, SystemError, SystemResult, WasmQuery, from_binary,
+    from_binary, from_slice, to_binary, Coin, ContractResult, Empty, OwnedDeps, Querier,
+    QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery,
 };
 
 use std::marker::PhantomData;
-
 
 pub const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
 
@@ -34,17 +33,16 @@ pub struct WasmMockQuerier {
     lsd_state_querier: LsdStateQuerier,
 }
 
-
 #[derive(Clone)]
 pub struct LsdStateQuerier {
     // this lets us iterate over all pairs that match the first string
-    lsd_state: Option<LSDStateResponse>
+    lsd_state: Option<LSDStateResponse>,
 }
 
 impl LsdStateQuerier {
     pub fn new(lsd_state: LSDStateResponse) -> Self {
         LsdStateQuerier {
-            lsd_state: Some(lsd_state)
+            lsd_state: Some(lsd_state),
         }
     }
 }
@@ -71,18 +69,16 @@ impl WasmMockQuerier {
             QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => {
                 if *contract_addr == MOCK_LSD_HUB_CONTRACT_ADDR {
                     let lsd_message: LSDQueryMsg = from_binary(msg).unwrap();
-                    match lsd_message{
-                        LSDQueryMsg::State {  } => {
-                            let state_response = self.lsd_state_querier.lsd_state.clone().unwrap();          
+                    match lsd_message {
+                        LSDQueryMsg::State {} => {
+                            let state_response = self.lsd_state_querier.lsd_state.clone().unwrap();
                             SystemResult::Ok(ContractResult::from(to_binary(&state_response)))
                         }
-
                     }
-
-                }else{
+                } else {
                     unimplemented!()
                 }
-            },
+            }
             _ => self.base.handle_query(request),
         }
     }
@@ -90,9 +86,9 @@ impl WasmMockQuerier {
 
 impl WasmMockQuerier {
     pub fn new(base: MockQuerier<Empty>) -> Self {
-        WasmMockQuerier { 
+        WasmMockQuerier {
             base,
-            lsd_state_querier: LsdStateQuerier { lsd_state: None }
+            lsd_state_querier: LsdStateQuerier { lsd_state: None },
         }
     }
 
@@ -101,7 +97,7 @@ impl WasmMockQuerier {
         self.lsd_state_querier = LsdStateQuerier::new(lsd_state);
     }
 
-    pub fn query_lsd_state(&self) -> LSDStateResponse{
+    pub fn query_lsd_state(&self) -> LSDStateResponse {
         self.lsd_state_querier.lsd_state.clone().unwrap()
     }
 }

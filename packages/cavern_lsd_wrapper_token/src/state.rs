@@ -9,11 +9,10 @@ pub const HUB_CONTRACT_KEY: Item<Addr> = Item::new("\u{0}\u{c}hub_contract");
 pub const LSD_CONTRACT_KEY: Item<LsdContracts> = Item::new("\u{0}\u{c}lsd_contract");
 
 #[cw_serde]
-pub struct LsdContracts{
+pub struct LsdContracts {
     pub hub: Addr,
-    pub token: Addr
+    pub token: Addr,
 }
-
 
 // meta is the token definition as well as the total_supply
 pub fn read_hub_contract(storage: &dyn Storage) -> StdResult<Addr> {
@@ -29,7 +28,10 @@ pub fn read_lsd_contract(storage: &dyn Storage) -> StdResult<LsdContracts> {
     LSD_CONTRACT_KEY.load(storage)
 }
 
-pub fn store_lsd_contract(storage: &mut dyn Storage, lsd_contracts: &LsdContracts) -> StdResult<()> {
+pub fn store_lsd_contract(
+    storage: &mut dyn Storage,
+    lsd_contracts: &LsdContracts,
+) -> StdResult<()> {
     LSD_CONTRACT_KEY.save(storage, lsd_contracts)
 }
 
@@ -41,7 +43,6 @@ pub struct WrapperState {
     pub backing_luna: Decimal,
     pub lsd_balance: Uint128,
 }
-
 
 #[cfg(test)]
 mod test {

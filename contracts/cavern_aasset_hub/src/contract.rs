@@ -22,7 +22,6 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
-
     // store config
     let data = Config {
         creator: info.sender,

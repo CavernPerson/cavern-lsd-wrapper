@@ -1,15 +1,14 @@
+use crate::querier::get_current_exchange_rate;
+use crate::state::LsdContracts;
+use crate::state::HUB_CONTRACT_KEY;
 use basset::external::LSDStateResponseTrait;
-use serde::Deserialize;
 use basset::reward::MigrateMsg;
 use basset::wrapper::TokenInfoResponse;
 use cw20_base::contract::query_token_info;
-use crate::querier::get_current_exchange_rate;
-use crate::state::HUB_CONTRACT_KEY;
-use crate::state::LsdContracts;
+use serde::Deserialize;
 
-use crate::state::WrapperState;
 use crate::state::read_lsd_contract;
-
+use crate::state::WrapperState;
 
 use crate::state::store_hub_contract;
 use crate::state::store_lsd_contract;
@@ -45,10 +44,13 @@ pub fn instantiate(
     info: MessageInfo,
     msg: TokenInitMsg,
 ) -> StdResult<Response> {
-    store_lsd_contract(deps.storage, &LsdContracts{
-        hub: deps.api.addr_validate(&msg.lsd_hub_contract)?,
-        token: deps.api.addr_validate(&msg.lsd_token_contract)?
-    })?;
+    store_lsd_contract(
+        deps.storage,
+        &LsdContracts {
+            hub: deps.api.addr_validate(&msg.lsd_hub_contract)?,
+            token: deps.api.addr_validate(&msg.lsd_token_contract)?,
+        },
+    )?;
 
     store_hub_contract(deps.storage, &deps.api.addr_validate(&msg.hub_contract)?)?;
 
@@ -85,14 +87,19 @@ pub fn execute<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
             execute_transfer(deps, env, info, recipient, amount)
         }
         ExecuteMsg::Burn { amount } => execute_burn::<T>(deps, env, info, amount),
-        ExecuteMsg::BurnAll { } => execute_burn_all::<T>(deps, env, info),
+        ExecuteMsg::BurnAll {} => execute_burn_all::<T>(deps, env, info),
         ExecuteMsg::Send {
             contract,
             amount,
             msg,
         } => execute_send(deps, env, info, contract, amount, msg),
-        ExecuteMsg::Mint { recipient, amount } => execute_mint::<T>(deps, env, info, recipient, amount),
-        ExecuteMsg::MintWith { recipient, lsd_amount } => execute_mint_with::<T>(deps, env, info, recipient, lsd_amount),
+        ExecuteMsg::Mint { recipient, amount } => {
+            execute_mint::<T>(deps, env, info, recipient, amount)
+        }
+        ExecuteMsg::MintWith {
+            recipient,
+            lsd_amount,
+        } => execute_mint_with::<T>(deps, env, info, recipient, lsd_amount),
         ExecuteMsg::IncreaseAllowance {
             spender,
             amount,
@@ -108,7 +115,9 @@ pub fn execute<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
             recipient,
             amount,
         } => execute_transfer_from(deps, env, info, owner, recipient, amount),
-        ExecuteMsg::BurnFrom { owner, amount } => execute_burn_from::<T>(deps, env, info, owner, amount),
+        ExecuteMsg::BurnFrom { owner, amount } => {
+            execute_burn_from::<T>(deps, env, info, owner, amount)
+        }
         ExecuteMsg::SendFrom {
             owner,
             contract,
@@ -128,33 +137,39 @@ pub fn execute<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
     }
 }
 
-pub fn query<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
-
+pub fn query<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
+    deps: Deps,
+    env: Env,
+    msg: QueryMsg,
+) -> StdResult<Binary> {
     // If the token info are queried, we also add the current wLSD exchange rate to it
-    match msg{
-        QueryMsg::TokenInfo {  } => {
+    match msg {
+        QueryMsg::TokenInfo {} => {
             let token_info = query_token_info(deps)?;
             let mut state = WrapperState::default();
-            to_binary(&TokenInfoResponse{
+            to_binary(&TokenInfoResponse {
                 name: token_info.name,
                 symbol: token_info.symbol,
                 decimals: token_info.decimals,
                 total_supply: token_info.total_supply,
-                exchange_rate: get_current_exchange_rate::<T>(deps, env, &mut state).map_err(|err| StdError::generic_err(err.to_string()))?
+                exchange_rate: get_current_exchange_rate::<T>(deps, env, &mut state)
+                    .map_err(|err| StdError::generic_err(err.to_string()))?,
             })
-        },
-        _ => cw20_query(deps, env, msg)
+        }
+        _ => cw20_query(deps, env, msg),
     }
 }
 
-fn compute_accrued_rewards<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(deps: Deps, env: Env) -> Result<AccruedRewards, ContractError> {
-
+fn compute_accrued_rewards<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
+    deps: Deps,
+    env: Env,
+) -> Result<AccruedRewards, ContractError> {
     // In this function, we have to make sure the token has a 1 exchange rate to Luna.
     let mut state = WrapperState::default();
     let current_exchange_rate = get_current_exchange_rate::<T>(deps, env, &mut state)?;
 
     // If the current exchange rate is lower than the previous one, we have just had a slashing event or something else
-    // We can't decompound and we can't recompound 
+    // We can't decompound and we can't recompound
     if current_exchange_rate < Decimal::one() {
         // There is no accrued rewards to decompound.
         return Err(ContractError::Std(StdError::generic_err(
@@ -166,11 +181,11 @@ fn compute_accrued_rewards<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(d
 
     let mut rewards_to_decompound = (Decimal::from_ratio(state.lsd_balance, 1u128)
         - (Decimal::from_ratio(state.wlsd_supply, 1u128) / state.lsd_exchange_rate))
-            * Uint128::one();
+        * Uint128::one();
 
     // We substract 1 to the rewards to decompound so that we don't screw up the underlying value of the wrapper token
     // The underlying value should be if possible always above 1 luna per wrapper token (slashing events should happen as little often as possible)
-    if rewards_to_decompound > Uint128::zero(){
+    if rewards_to_decompound > Uint128::zero() {
         rewards_to_decompound -= Uint128::one();
         luna_rewards -= state.lsd_exchange_rate * Uint128::one();
     }
@@ -202,17 +217,15 @@ pub fn execute_decompound<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
     info: MessageInfo,
     recipient: Option<String>,
 ) -> Result<Response, ContractError> {
-
     let hub_contract = HUB_CONTRACT_KEY.load(deps.storage)?;
-    if info.sender != hub_contract{
-        return Err(ContractError::Unauthorized {  })
+    if info.sender != hub_contract {
+        return Err(ContractError::Unauthorized {});
     }
 
     let recipient = recipient
         .map(|x| deps.api.addr_validate(&x))
         .transpose()?
         .unwrap_or(info.sender);
-
 
     let lsd_contract = read_lsd_contract(deps.storage)?;
     let slashing_error = ContractError::Std(StdError::generic_err("No rewards to decompound"));

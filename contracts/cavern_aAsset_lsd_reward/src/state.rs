@@ -28,8 +28,8 @@ pub struct Config {
     pub hub_contract: Addr,
     pub custody_contract: Option<Addr>,
     pub reward_denom: String,
-    
-    pub known_cw20_tokens: Vec<Addr>
+
+    pub known_cw20_tokens: Vec<Addr>,
 }
 
 pub fn store_config(storage: &mut dyn Storage, config: &Config) -> StdResult<()> {

@@ -1,13 +1,12 @@
 use basset::external::LSDStateResponseTrait;
+use cosmwasm_std::Decimal;
+use cosmwasm_std::Deps;
+use cosmwasm_std::StdResult;
+use cosmwasm_std::{
+    to_binary, Binary, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg,
+};
 use cw20_base::contract::query_balance;
 use serde::Deserialize;
-use cosmwasm_std::StdResult;
-use cosmwasm_std::Deps;
-use cosmwasm_std::Decimal;
-use cosmwasm_std::{
-    to_binary, Binary, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128,
-    WasmMsg,
-};
 
 use cw20::Cw20ExecuteMsg;
 use cw20_base::allowances::{
@@ -23,7 +22,6 @@ use cw20_base::ContractError;
 use crate::querier::query_lsd_state;
 use crate::state::read_lsd_contract;
 
-
 pub fn execute_transfer(
     deps: DepsMut,
     env: Env,
@@ -34,8 +32,11 @@ pub fn execute_transfer(
     cw20_transfer(deps, env, info, recipient, amount)
 }
 
-
-fn _before_burn<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(deps: Deps, info: MessageInfo, amount: Uint128) -> StdResult<CosmosMsg>{
+fn _before_burn<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
+    deps: Deps,
+    info: MessageInfo,
+    amount: Uint128,
+) -> StdResult<CosmosMsg> {
     let lsd_contracts = read_lsd_contract(deps.storage)?;
 
     // When burning some tokens from here, we transfer an equivalent amount of 1 Luna per each burned token to the burner
@@ -50,7 +51,6 @@ fn _before_burn<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(deps: Deps, 
         })?,
         funds: vec![],
     }))
-
 }
 
 pub fn execute_burn<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
@@ -59,7 +59,6 @@ pub fn execute_burn<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
     info: MessageInfo,
     amount: Uint128,
 ) -> Result<Response, ContractError> {
-
     let transfer_message = _before_burn::<T>(deps.as_ref(), info.clone(), amount)?;
 
     let res = cw20_burn(deps, env, info, amount)?;
@@ -72,14 +71,12 @@ pub fn execute_burn_all<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
     env: Env,
     info: MessageInfo,
 ) -> Result<Response, ContractError> {
-
     let amount = query_balance(deps.as_ref(), info.sender.to_string())?;
 
-    if amount.balance.is_zero(){
+    if amount.balance.is_zero() {
         return Ok(Response::new());
     }
     execute_burn::<T>(deps, env, info, amount.balance)
-
 }
 
 pub fn execute_mint<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
@@ -97,7 +94,8 @@ pub fn execute_mint<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
     let lsd_state: T = query_lsd_state(deps.as_ref(), &lsd_contracts)?;
 
     // We add 1 to the send_lsd_amount here to make sure we are not undercollateralizing our token at the start
-    let send_lsd_amount = Decimal::from_ratio(amount, 1u128) / lsd_state.exchange_rate() + Decimal::one();
+    let send_lsd_amount =
+        Decimal::from_ratio(amount, 1u128) / lsd_state.exchange_rate() + Decimal::one();
 
     let cw20_transfer_message = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: lsd_contracts.token.to_string(),
