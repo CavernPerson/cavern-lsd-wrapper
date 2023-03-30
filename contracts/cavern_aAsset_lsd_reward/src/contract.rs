@@ -98,6 +98,11 @@ pub fn set_custody_contract(
     }
 
     if let Some(known_tokens) = known_tokens {
+        if !has_unique_elements(&known_tokens) {
+            return Err(StdError::generic_err(
+                "Known tokens shouldn't contain duplicate assets",
+            ));
+        }
         config.known_cw20_tokens = known_tokens
             .iter()
             .map(|token| deps.api.addr_validate(token))
