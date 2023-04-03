@@ -1,4 +1,5 @@
 use cosmwasm_std::entry_point;
+use cosmwasm_std::Empty;
 use cosmwasm_std::{
     attr, to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Response,
     StdError, StdResult, WasmMsg,
@@ -152,4 +153,9 @@ fn query_state(deps: Deps) -> StdResult<StateResponse> {
 
 fn query_params(deps: Deps) -> StdResult<Parameters> {
     PARAMETERS.load(deps.storage)
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> StdResult<Response> {
+    Ok(Response::default())
 }
