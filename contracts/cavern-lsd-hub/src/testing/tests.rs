@@ -17,26 +17,23 @@
 //!      });
 //! 4. Anywhere you see query(deps.as_ref(), ...) you must replace it with query(&mut deps, ...)
 
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::coins;
 use cosmwasm_std::{
     coin, from_binary, to_binary, Api, CosmosMsg, Decimal, OwnedDeps, Querier, Response, StdError,
     Storage, Uint128, WasmMsg,
 };
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
 use cosmwasm_std::testing::{mock_env, mock_info};
 
 use crate::contract::{execute, instantiate, query};
-use basset::hub::QueryMsg;
+use basset::hub::{QueryMsg, Parameters};
 use basset::hub::{ConfigResponse, ExecuteMsg, InstantiateMsg, StateResponse};
 
 use basset::hub::ExecuteMsg::UpdateConfig;
 
 use super::mock_querier::mock_dependencies as dependencies;
 
-use crate::state::Parameters;
 
 use basset::reward::ExecuteMsg::SwapToRewardDenom;
 use std::borrow::BorrowMut;
@@ -291,8 +288,7 @@ pub fn proper_update_config() {
 }
 
 // sample MIR claim msg
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum MIRMsg {
     MIRClaim {},
 }

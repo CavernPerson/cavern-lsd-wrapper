@@ -1,3 +1,4 @@
+use basset::hub::Parameters;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::Empty;
 use cosmwasm_std::{
@@ -7,7 +8,7 @@ use cosmwasm_std::{
 
 use crate::config::execute_update_config;
 
-use crate::state::{Parameters, CONFIG, PARAMETERS, STATE};
+use crate::state::{CONFIG, PARAMETERS, STATE};
 
 use basset::hub::{
     Config, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, State, StateResponse,

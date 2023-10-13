@@ -1,4 +1,4 @@
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Decimal, Uint128};
 
 pub type UnbondRequest = Vec<(u64, Uint128)>;
@@ -36,6 +36,7 @@ impl State {
 }
 
 #[cw_serde]
+#[cfg_attr(feature="interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg {
     ////////////////////
     /// Owner's operations
@@ -59,9 +60,14 @@ pub enum ExecuteMsg {
 }
 
 #[cw_serde]
+#[cfg_attr(feature="interface", derive(cw_orch::QueryFns))]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
     Config {},
+    #[returns(StateResponse)]
     State {},
+    #[returns(Parameters)]
     Parameters {},
 }
 
@@ -119,4 +125,10 @@ pub struct UnbondRequestsResponse {
 #[cw_serde]
 pub struct AllHistoryResponse {
     pub history: Vec<UnbondHistory>,
+}
+
+
+#[cw_serde]
+pub struct Parameters {
+    pub reward_denom: String,
 }

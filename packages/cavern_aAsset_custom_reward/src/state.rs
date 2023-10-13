@@ -1,9 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Decimal256, Deps, Order, StdResult, Storage, Uint128};
-use serde::de::DeserializeOwned;
-
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 
 use basset::reward::HolderResponse;
 use cw_storage_plus::{Bound, Item, Map};
@@ -23,7 +20,7 @@ pub struct SwapConfig {
 }
 // End
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Config {
     pub owner: Addr,
     pub hub_contract: Addr,
@@ -56,7 +53,7 @@ pub fn read_retrieve_config<I: Serialize + DeserializeOwned>(
     retrieve_config.load(storage)
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct State {
     pub global_index: Decimal256,
     pub total_balance: Uint128,
@@ -71,7 +68,7 @@ pub fn read_state(storage: &dyn Storage) -> StdResult<State> {
     STATE.load(storage)
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Holder {
     pub balance: Uint128,
     pub index: Decimal256,

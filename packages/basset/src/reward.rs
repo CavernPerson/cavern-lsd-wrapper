@@ -1,10 +1,9 @@
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Decimal;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Decimal256, Uint128};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub hub_contract: String,
     pub reward_denom: String,
@@ -15,8 +14,9 @@ pub struct InstantiateMsg {
     pub known_tokens: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[cfg_attr(feature="interface", derive(cw_orch::ExecuteFns))]
+
 pub enum ExecuteMsg {
     ////////////////////
     /// Owner's operations
@@ -42,25 +42,29 @@ pub enum ExecuteMsg {
     ClaimRewards { recipient: Option<String> },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[cfg_attr(feature="interface", derive(cw_orch::QueryFns))]
+#[derive(QueryResponses)]
+
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
     Config {},
+    #[returns(AccruedRewardsResponse)]
     AccruedRewards { address: String },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct ConfigResponse {
     pub hub_contract: String,
     pub reward_denom: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct AccruedRewardsResponse {
     pub rewards: Uint128,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct HolderResponse {
     pub address: String,
     pub balance: Uint128,
@@ -68,12 +72,12 @@ pub struct HolderResponse {
     pub pending_rewards: Decimal256,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct HoldersResponse {
     pub holders: Vec<HolderResponse>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MigrateMsg {
     pub max_decompound_ratio: Option<Decimal>
 }
