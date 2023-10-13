@@ -1,9 +1,10 @@
+use cosmwasm_schema::cw_serde;
 use cw20::Cw20Coin;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use std::marker::PhantomData;
 
-#[derive(Serialize, Deserialize, JsonSchema)]
-pub struct TokenInitMsg {
+#[cw_serde]
+pub struct TokenInitMsg<I> {
+    pub types: Option<PhantomData<I>>,
     pub name: String,
     pub symbol: String,
     pub decimals: u8,
@@ -12,6 +13,5 @@ pub struct TokenInitMsg {
     // only hub contract can call decompound
     pub hub_contract: String,
 
-    pub lsd_hub_contract: String,
-    pub lsd_token_contract: String,
+    pub lsd_config: I,
 }

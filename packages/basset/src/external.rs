@@ -29,3 +29,55 @@ impl LSDStateResponseTrait for LSDStateResponse {
         self.exchange_rate
     }
 }
+
+// Spectrum token
+
+#[cw_serde]
+pub enum SpectrumExecuteMsg {
+    Unbond { amount: Uint128 },
+}
+
+#[cw_serde]
+pub enum SpectrumQueryMsg {
+    State {},
+    UserInfo { user: String, lp_token: String },
+    RewardInfo { staker_addr: String },
+}
+
+#[cw_serde]
+pub struct CTokenStateResponse {
+    /// Total supply to the cToken
+    pub total_bond_share: Uint128,
+}
+
+#[cw_serde]
+pub struct UserInfoResponse {
+    /// Total supply to the cToken
+    pub bond_share: Uint128,
+    pub bond_amount: Uint128,
+    pub reward_indexes: Vec<(String, Decimal)>,
+    pub pending_rewards: Vec<(String, Decimal)>,
+}
+
+// We define a custom struct for each query response
+#[cw_serde]
+pub struct RewardInfoResponse {
+    pub staker_addr: String,
+    pub reward_info: RewardInfoResponseItem,
+}
+
+#[cw_serde]
+pub struct RewardInfoResponseItem {
+    /// The LP token contract address
+    pub staking_token: String,
+    /// The LP token amount bonded
+    pub bond_amount: Uint128,
+    /// The share of total LP token bonded
+    pub bond_share: Uint128,
+    /// The deposit amount
+    pub deposit_amount: Uint128,
+    /// The weighted average deposit time
+    pub deposit_time: u64,
+    /// The deposit cost
+    pub deposit_costs: Vec<Uint128>,
+}

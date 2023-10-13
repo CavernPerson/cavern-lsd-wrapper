@@ -6,6 +6,7 @@ use cw20::Expiration;
 use cw20::Logo;
 
 #[cw_serde]
+#[cfg_attr(feature="interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg {
     /// Transfer is a base message to move tokens to another account without triggering actions
     Transfer {
@@ -104,6 +105,14 @@ pub struct AccruedRewards {
     pub lsd_rewards: Uint128,
 }
 
+#[derive(Default)]
+#[cw_serde]
+pub struct AccruedRewardsLimited {
+    pub rate_decrease: Decimal,
+    pub luna_rewards: Uint128,
+    pub lsd_rewards: Uint128,
+}
+
 #[cw_serde]
 pub struct TokenInfoResponse {
     pub name: String,
@@ -111,4 +120,14 @@ pub struct TokenInfoResponse {
     pub decimals: u8,
     pub total_supply: Uint128,
     pub exchange_rate: Decimal,
+}
+
+#[cw_serde]
+pub struct TokenInfoResponseWithLimit {
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u8,
+    pub total_supply: Uint128,
+    pub exchange_rate: Decimal,
+    pub expected_exchange_rate: Decimal
 }

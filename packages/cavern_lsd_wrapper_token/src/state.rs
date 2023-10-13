@@ -1,12 +1,15 @@
+use crate::trait_def::LSDHub;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Decimal;
 use cosmwasm_std::Uint128;
 use cosmwasm_std::{Addr, StdResult, Storage};
+use serde::Deserialize;
+use serde::Serialize;
 //use cosmwasm_storage::{singleton, singleton_read};
 use cw_storage_plus::Item;
 
+pub const LSD_CONFIG_KEY: &str = "lcd_config";
 pub const HUB_CONTRACT_KEY: Item<Addr> = Item::new("\u{0}\u{c}hub_contract");
-pub const LSD_CONTRACT_KEY: Item<LsdContracts> = Item::new("\u{0}\u{c}lsd_contract");
 
 #[cw_serde]
 pub struct LsdContracts {
@@ -24,15 +27,20 @@ pub fn store_hub_contract(storage: &mut dyn Storage, hub_contract: &Addr) -> Std
 }
 
 // meta is the token definition as well as the total_supply
-pub fn read_lsd_contract(storage: &dyn Storage) -> StdResult<LsdContracts> {
-    LSD_CONTRACT_KEY.load(storage)
+pub fn read_lsd_config<T: for<'a> Deserialize<'a> + Serialize>(
+    storage: &dyn Storage,
+) -> StdResult<T> {
+    Item::new(LSD_CONFIG_KEY).load(storage)
 }
 
-pub fn store_lsd_contract(
+pub fn store_lsd_config<
+    I: Serialize + for<'a> Deserialize<'a>,
+    T: LSDHub<I> + for<'b> Deserialize<'b> + Serialize,
+>(
     storage: &mut dyn Storage,
-    lsd_contracts: &LsdContracts,
+    lsd_config: &T,
 ) -> StdResult<()> {
-    LSD_CONTRACT_KEY.save(storage, lsd_contracts)
+    Item::new(LSD_CONFIG_KEY).save(storage, lsd_config)
 }
 
 #[cw_serde]

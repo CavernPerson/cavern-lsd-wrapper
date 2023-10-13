@@ -1,28 +1,27 @@
 use crate::querier::get_current_exchange_rate;
-use crate::state::LsdContracts;
+use crate::state::read_lsd_config;
 use crate::state::HUB_CONTRACT_KEY;
-use basset::external::LSDStateResponseTrait;
+use serde::Serialize;
+
+use crate::trait_def::LSDHub;
 use basset::reward::MigrateMsg;
 use basset::wrapper::TokenInfoResponse;
 use cw20_base::contract::query_token_info;
 use serde::Deserialize;
 
-use crate::state::read_lsd_contract;
 use crate::state::WrapperState;
 
 use crate::state::store_hub_contract;
-use crate::state::store_lsd_contract;
+use crate::state::store_lsd_config;
 
 use basset::wrapper::AccruedRewards;
 use basset::wrapper::ExecuteMsg;
 use cosmwasm_std::attr;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::to_binary;
-use cosmwasm_std::CosmosMsg;
+
 use cosmwasm_std::Decimal;
 use cosmwasm_std::Uint128;
-use cosmwasm_std::WasmMsg;
-use cw20::Cw20ExecuteMsg;
 
 use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
 
@@ -38,19 +37,17 @@ use crate::msg::TokenInitMsg;
 use cw20::MinterResponse;
 use cw20_base::ContractError;
 
-pub fn instantiate(
+pub fn instantiate<
+    I: Serialize + for<'b> Deserialize<'b>,
+    T: LSDHub<I> + Serialize + for<'a> Deserialize<'a>,
+>(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: TokenInitMsg,
+    msg: TokenInitMsg<I>,
 ) -> StdResult<Response> {
-    store_lsd_contract(
-        deps.storage,
-        &LsdContracts {
-            hub: deps.api.addr_validate(&msg.lsd_hub_contract)?,
-            token: deps.api.addr_validate(&msg.lsd_token_contract)?,
-        },
-    )?;
+    let lsd_config = T::instantiate_config(deps.as_ref(), msg.lsd_config)?;
+    store_lsd_config(deps.storage, &lsd_config)?;
 
     store_hub_contract(deps.storage, &deps.api.addr_validate(&msg.hub_contract)?)?;
 
@@ -76,7 +73,10 @@ pub fn instantiate(
     Ok(Response::default())
 }
 
-pub fn execute<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
+pub fn execute<
+    I: Serialize + for<'b> Deserialize<'b>,
+    T: LSDHub<I> + for<'a> Deserialize<'a> + Serialize,
+>(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -86,20 +86,20 @@ pub fn execute<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
         ExecuteMsg::Transfer { recipient, amount } => {
             execute_transfer(deps, env, info, recipient, amount)
         }
-        ExecuteMsg::Burn { amount } => execute_burn::<T>(deps, env, info, amount),
-        ExecuteMsg::BurnAll {} => execute_burn_all::<T>(deps, env, info),
+        ExecuteMsg::Burn { amount } => execute_burn::<I, T>(deps, env, info, amount),
+        ExecuteMsg::BurnAll {} => execute_burn_all::<I, T>(deps, env, info),
         ExecuteMsg::Send {
             contract,
             amount,
             msg,
         } => execute_send(deps, env, info, contract, amount, msg),
         ExecuteMsg::Mint { recipient, amount } => {
-            execute_mint::<T>(deps, env, info, recipient, amount)
+            execute_mint::<I, T>(deps, env, info, recipient, amount)
         }
         ExecuteMsg::MintWith {
             recipient,
             lsd_amount,
-        } => execute_mint_with::<T>(deps, env, info, recipient, lsd_amount),
+        } => execute_mint_with::<I, T>(deps, env, info, recipient, lsd_amount),
         ExecuteMsg::IncreaseAllowance {
             spender,
             amount,
@@ -116,7 +116,7 @@ pub fn execute<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
             amount,
         } => execute_transfer_from(deps, env, info, owner, recipient, amount),
         ExecuteMsg::BurnFrom { owner, amount } => {
-            execute_burn_from::<T>(deps, env, info, owner, amount)
+            execute_burn_from::<I, T>(deps, env, info, owner, amount)
         }
         ExecuteMsg::SendFrom {
             owner,
@@ -133,11 +133,16 @@ pub fn execute<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
             marketing,
         } => execute_update_marketing(deps, env, info, project, description, marketing),
         ExecuteMsg::UploadLogo(logo) => execute_upload_logo(deps, env, info, logo),
-        ExecuteMsg::Decompound { recipient } => execute_decompound::<T>(deps, env, info, recipient),
+        ExecuteMsg::Decompound { recipient } => {
+            execute_decompound::<I, T>(deps, env, info, recipient)
+        }
     }
 }
 
-pub fn query<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
+pub fn query<
+    I: Serialize + for<'a> Deserialize<'a>,
+    T: LSDHub<I> + Serialize + for<'b> Deserialize<'b>,
+>(
     deps: Deps,
     env: Env,
     msg: QueryMsg,
@@ -152,7 +157,7 @@ pub fn query<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
                 symbol: token_info.symbol,
                 decimals: token_info.decimals,
                 total_supply: token_info.total_supply,
-                exchange_rate: get_current_exchange_rate::<T>(deps, env, &mut state)
+                exchange_rate: get_current_exchange_rate::<I, T>(deps, env, &mut state)
                     .map_err(|err| StdError::generic_err(err.to_string()))?,
             })
         }
@@ -160,13 +165,16 @@ pub fn query<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
     }
 }
 
-fn compute_accrued_rewards<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
+fn compute_accrued_rewards<
+    I: Serialize + for<'b> Deserialize<'b>,
+    T: LSDHub<I> + Serialize + for<'a> Deserialize<'a>,
+>(
     deps: Deps,
     env: Env,
 ) -> Result<AccruedRewards, ContractError> {
     // In this function, we have to make sure the token has a 1 exchange rate to Luna.
     let mut state = WrapperState::default();
-    let current_exchange_rate = get_current_exchange_rate::<T>(deps, env, &mut state)?;
+    let current_exchange_rate = get_current_exchange_rate::<I, T>(deps, env, &mut state)?;
 
     // If the current exchange rate is lower than the previous one, we have just had a slashing event or something else
     // We can't decompound and we can't recompound
@@ -211,7 +219,10 @@ rtd = (b - wlsd/exchange_rate);
 
 */
 
-pub fn execute_decompound<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
+pub fn execute_decompound<
+    I: Serialize + for<'b> Deserialize<'b>,
+    T: LSDHub<I> + Serialize + for<'a> Deserialize<'a>,
+>(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -227,32 +238,26 @@ pub fn execute_decompound<T: LSDStateResponseTrait + for<'a> Deserialize<'a>>(
         .transpose()?
         .unwrap_or(info.sender);
 
-    let lsd_contract = read_lsd_contract(deps.storage)?;
+    let lsd_config: T = read_lsd_config(deps.storage)?;
     let slashing_error = ContractError::Std(StdError::generic_err("No rewards to decompound"));
-    let (out_messages, accrued_rewards) = match compute_accrued_rewards::<T>(deps.as_ref(), env) {
-        Err(err) => {
-            if err == slashing_error {
-                Ok((vec![], AccruedRewards::default()))
-            } else {
-                Err(err)
+    let (out_messages, accrued_rewards) =
+        match compute_accrued_rewards::<I, T>(deps.as_ref(), env.clone()) {
+            Err(err) => {
+                if err == slashing_error {
+                    Ok((vec![], AccruedRewards::default()))
+                } else {
+                    Err(err)
+                }
             }
-        }
-        Ok(rewards) => {
-            let decompound_messages = if !rewards.lsd_rewards.is_zero() {
-                vec![CosmosMsg::Wasm(WasmMsg::Execute {
-                    contract_addr: lsd_contract.token.to_string(),
-                    msg: to_binary(&Cw20ExecuteMsg::Transfer {
-                        recipient: recipient.to_string(),
-                        amount: rewards.lsd_rewards,
-                    })?,
-                    funds: vec![],
-                })]
-            } else {
-                vec![]
-            };
-            Ok((decompound_messages, rewards))
-        }
-    }?;
+            Ok(rewards) => {
+                let decompound_messages = if !rewards.lsd_rewards.is_zero() {
+                    lsd_config.send_funds(deps.as_ref(), env, rewards.lsd_rewards, recipient)?
+                } else {
+                    vec![]
+                };
+                Ok((decompound_messages, rewards))
+            }
+        }?;
 
     let res = Response::new()
         .add_attributes(vec![

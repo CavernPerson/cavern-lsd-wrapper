@@ -1,3 +1,4 @@
+use cosmwasm_std::Decimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -26,8 +27,12 @@ pub enum ExecuteMsg {
 
     /// Updates the contract config
     UpdateConfig {
+        owner: Option<String>,
         custody_contract: Option<String>,
         known_tokens: Option<Vec<String>>,
+        astroport_addr: Option<String>,
+        phoenix_addr: Option<String>,
+        terraswap_addr: Option<String>,
     },
     ////////////////////
     /// User's operations
@@ -69,4 +74,6 @@ pub struct HoldersResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct MigrateMsg {}
+pub struct MigrateMsg {
+    pub max_decompound_ratio: Option<Decimal>
+}
