@@ -16,5 +16,4 @@ cosmwasm-schema = { version = "1.1.0" }
 cw-storage-plus = { version = "0.15.1" }
 schemars = "0.8.1"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-cw-orch = { package= "cw-orch-interchain", git="https://github.com/AbstractSDK/cw-orch-interchain", rev="9c9be2ef1d73c6d6034bb7fe5282f9ee263eedcd"}
-cw-orch-fork-mock = { git="https://github.com/AbstractSDK/cw-orch-interchain", rev="9c9be2ef1d73c6d6034bb7fe5282f9ee263eedcd"}
+cw-orch = { version="0.18.0" }

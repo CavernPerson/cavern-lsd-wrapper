@@ -10,6 +10,7 @@ edition = "2021"
 [dependencies]
 basset = { version = "1.1.0", path = "../packages/basset", features=["interface"]  }
 cavern-lsd-hub = { version = "1.0.0", path = "../contracts/cavern-lsd-hub" }
+cavern-lsd-hub-simple = { version = "1.0.0", path = "../contracts/cavern-lsd-hub-simple" }
 cavern-lsd-reward = { version = "1.0.0", path = "../contracts/cavern-lsd-reward" }
 cosmwasm-std = "1.4.1"
 cw-orch = { workspace=true }

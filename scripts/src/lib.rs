@@ -1,14 +1,22 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use cw_orch::daemon::{NetworkInfo, ChainInfo, ChainKind};
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod hub_reward_migration;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+
+
+pub const MIGALOO: NetworkInfo = NetworkInfo{
+    id: "migaloo",
+    pub_address_prefix: "migaloo",
+    coin_type: 118
+};
+
+pub const MIGALOO_1: ChainInfo = ChainInfo{
+    chain_id: "migaloo-1",
+    gas_denom: "uwhale",
+    gas_price: 1f64,
+    grpc_urls: &["http://migaloo-grpc.polkachu.com:20790"],
+    lcd_url: None,
+    fcd_url: None,
+    network_info: MIGALOO,
+    kind: ChainKind::Mainnet
+};

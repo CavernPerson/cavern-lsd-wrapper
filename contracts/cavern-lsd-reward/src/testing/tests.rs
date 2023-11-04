@@ -19,7 +19,7 @@
 
 use basset::dex_router::AssetInfo;
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{coins, StdError};
+use cosmwasm_std::{coins, StdError, Empty};
 use cosmwasm_std::{from_binary, BankMsg, Coin, CosmosMsg, SubMsg, Uint128};
 
 use crate::contract::{execute, instantiate, migrate, query};
@@ -267,7 +267,5 @@ fn test_migrate() {
         amount: Uint128::new(100u128),
     }]);
 
-    migrate(deps.as_mut(), mock_env(), MigrateMsg {
-        max_decompound_ratio: None
-    }).unwrap();
+    migrate(deps.as_mut(), mock_env(), Empty{}).unwrap();
 }

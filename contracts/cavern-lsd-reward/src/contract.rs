@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use cosmwasm_std::{Addr, StdError};
+use cosmwasm_std::{Addr, StdError, Empty};
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -166,6 +166,6 @@ fn query_config(deps: Deps) -> StdResult<Config> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> StdResult<Response> {
     Ok(Response::default())
 }
