@@ -11,7 +11,7 @@ use crate::config::execute_update_config;
 use crate::state::{CONFIG, PARAMETERS, STATE};
 
 use basset::hub::{
-    Config, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, State, StateResponse,
+    Config, ConfigResponse, ExecuteMsg, OldInstantiateMsg, QueryMsg, State, StateResponse,
 };
 
 use basset::wrapper::ExecuteMsg as LSDWrapperExecuteMsg;
@@ -22,7 +22,7 @@ pub fn instantiate(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: OldInstantiateMsg,
 ) -> StdResult<Response> {
     // store config
     let data = Config {

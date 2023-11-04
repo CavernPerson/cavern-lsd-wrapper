@@ -1,4 +1,3 @@
-use basset::hub::Parameters;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::Empty;
 use cosmwasm_std::{
@@ -8,7 +7,7 @@ use cosmwasm_std::{
 
 use crate::config::execute_update_config;
 
-use crate::state::{CONFIG, PARAMETERS, STATE};
+use crate::state::{CONFIG, STATE};
 
 use basset::hub::{
     Config, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, State, StateResponse,
@@ -40,13 +39,6 @@ pub fn instantiate(
     };
 
     STATE.save(deps.storage, &state)?;
-
-    // instantiate parameters
-    let params = Parameters {
-        reward_denom: msg.reward_denom,
-    };
-
-    PARAMETERS.save(deps.storage, &params)?;
 
     Ok(Response::new())
 }
@@ -111,7 +103,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
         QueryMsg::State {} => to_binary(&query_state(deps)?),
-        QueryMsg::Parameters {} => to_binary(&query_params(deps)?),
+        QueryMsg::Parameters {  } => panic!("No such query")
     }
 }
 
@@ -143,10 +135,6 @@ fn query_state(deps: Deps) -> StdResult<StateResponse> {
         prev_hub_balance: state.prev_hub_balance,
     };
     Ok(res)
-}
-
-fn query_params(deps: Deps) -> StdResult<Parameters> {
-    PARAMETERS.load(deps.storage)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

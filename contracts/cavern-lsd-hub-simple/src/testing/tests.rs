@@ -46,9 +46,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     reward_contract: String,
     token_contract: String,
 ) {
-    let msg = InstantiateMsg {
-        reward_denom: "uusd".to_string(),
-    };
+    let msg = InstantiateMsg {};
 
     let owner_info = mock_info(owner.as_str(), &[coin(1000000, "uluna")]);
     instantiate(deps.as_mut(), mock_env(), owner_info.clone(), msg).unwrap();
@@ -71,9 +69,7 @@ fn proper_initialization() {
     let mut deps = dependencies(&[]);
 
     // successful call
-    let msg = InstantiateMsg {
-        reward_denom: "uusd".to_string(),
-    };
+    let msg = InstantiateMsg {};
 
     let _owner = "owner1";
     let owner_info = mock_info("owner1", &[]);
@@ -81,12 +77,6 @@ fn proper_initialization() {
     // we can just call .unwrap() to assert this was a success
     let res: Response = instantiate(deps.as_mut(), mock_env(), owner_info, msg).unwrap();
     assert_eq!(0, res.messages.len());
-
-    // check parameters storage
-    let params = QueryMsg::Parameters {};
-    let query_params: Parameters =
-        from_binary(&query(deps.as_ref(), mock_env(), params).unwrap()).unwrap();
-    assert_eq!(query_params.reward_denom, "uusd");
 
     // state storage must be initialized
     let state = QueryMsg::State {};
