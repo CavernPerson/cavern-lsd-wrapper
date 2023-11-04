@@ -13,7 +13,6 @@ use crate::state::{CONFIG, PARAMETERS, STATE};
 use basset::hub::{
     Config, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, State, StateResponse,
 };
-use basset::reward::ExecuteMsg::SwapToRewardDenom;
 
 use basset::wrapper::ExecuteMsg as LSDWrapperExecuteMsg;
 
@@ -87,20 +86,13 @@ pub fn execute_update_global(
         .to_string();
 
     // Send decompound message so that LSD rewards get taken out of the token if they exist
-    let mut messages = vec![CosmosMsg::Wasm(WasmMsg::Execute {
+    let messages = vec![CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: lsd_wrapper_contract,
         msg: to_binary(&LSDWrapperExecuteMsg::Decompound {
-            recipient: Some(reward_addr.clone()),
+            recipient: Some(reward_addr),
         })?,
         funds: vec![],
     })];
-
-    // Send Swap message to reward contract
-    messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: reward_addr,
-        msg: to_binary(&SwapToRewardDenom {}).unwrap(),
-        funds: vec![],
-    }));
 
     //update state last modified
     STATE.update(deps.storage, |mut last_state| -> StdResult<State> {

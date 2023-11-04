@@ -34,7 +34,7 @@ schemars = { workspace = true }
 serde = { workspace = true, default-features = false, features = ["derive"] }
 basset = { path = "../../packages/basset", default-features = false, version = "1.1.0"}
 cavern-lsd-wrapper-token = { path = "../../packages/cavern_lsd_wrapper_token", default-features = false, version = "1.0.0"}
-cw-orch = { version = "0.16.4", optional = true }
+cw-orch = { workspace=true, optional = true }
 [dev-dependencies]
 # we only need to enable this if we use integration tests
 #cosmwasm-vm = { version = "0.15.0", default-features = false }

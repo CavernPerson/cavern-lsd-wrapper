@@ -34,7 +34,7 @@ cw-storage-plus = { workspace=true, features = ["iterator"]}
 schemars = { workspace = true }
 serde = { workspace = true, default-features = false, features = ["derive"] }
 basset = { path = "../../packages/basset", default-features = false, version = "1.1.0"}
-cw-orch = { version = "0.16.4", optional = true }
+cw-orch = { workspace=true, optional = true }
 
 [dev-dependencies]
 cosmwasm-storage = { workspace=true, features = ["iterator"] }

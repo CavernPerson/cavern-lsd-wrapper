@@ -34,6 +34,6 @@ serde = { workspace = true, default-features = false, features = ["derive"] }
 strum = "0.24.1"
 strum_macros = "0.24.1"
 astroport = "2.3.1"
-cw-orch = { version = "0.16.4", optional = true }
+cw-orch = { workspace = true, optional = true }
 
 [dev-dependencies]
