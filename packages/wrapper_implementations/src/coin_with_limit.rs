@@ -18,7 +18,7 @@ use cw20_base::ContractError;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 use cosmwasm_std::CosmosMsg;
-
+use basset::reward::MigrateMsg;
 use cosmwasm_std::Env;
 use cosmwasm_std::QueryRequest;
 use cosmwasm_std::Uint128;
@@ -144,4 +144,8 @@ pub fn execute(
 
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     cavern_lsd_wrapper_token_with_limit::contract::query::<StrideLSDConfigRaw, StrideLSDConfig>(deps, env, msg)
+}
+
+pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> StdResult<Response> {
+    cavern_lsd_wrapper_token_with_limit::contract::migrate(deps, env, msg)
 }

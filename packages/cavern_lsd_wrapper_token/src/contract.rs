@@ -135,7 +135,10 @@ pub fn execute<
         ExecuteMsg::UploadLogo(logo) => execute_upload_logo(deps, env, info, logo),
         ExecuteMsg::Decompound { recipient } => {
             execute_decompound::<I, T>(deps, env, info, recipient)
-        }
+        },
+        ExecuteMsg::UpdateDecompoundRate { decompound_rate } => {
+            update_decompound_rate::<I, T>(deps, env, info, decompound_rate)
+        },
     }
 }
 
@@ -269,6 +272,23 @@ pub fn execute_decompound<
         ])
         .add_messages(out_messages);
 
+    Ok(res)
+}
+
+pub fn update_decompound_rate<
+I: Serialize + for<'b> Deserialize<'b>,
+T: LSDHub<I> + Serialize + for<'a> Deserialize<'a>,
+>(
+deps: DepsMut,
+env: Env,
+info: MessageInfo,
+decompound_rate: Option<Decimal>,
+) -> Result<Response, ContractError> {
+
+    let res = Response::new()
+        .add_attributes(vec![
+            attr("action", "unable to update_decompound_rate"),
+        ]);
     Ok(res)
 }
 

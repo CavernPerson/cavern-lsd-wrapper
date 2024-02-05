@@ -97,6 +97,10 @@ pub enum ExecuteMsg {
     Decompound {
         recipient: Option<String>,
     },
+    UpdateDecompoundRate {
+        decompound_rate: Option<Decimal>,
+    }
+ 
 }
 
 #[cw_serde]
@@ -183,5 +187,6 @@ pub struct TokenInfoResponseWithLimit {
     pub decimals: u8,
     pub total_supply: Uint128,
     pub exchange_rate: Decimal,
-    pub expected_exchange_rate: Decimal
+    pub expected_exchange_rate: Decimal,
+    pub max_decompound_ratio:Decimal,
 }

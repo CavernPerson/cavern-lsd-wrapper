@@ -1,4 +1,4 @@
-use crate::querier::{get_current_exchange_rate, get_expected_exchange_rate};
+use crate::querier::{get_current_exchange_rate, get_expected_exchange_rate, get_lsd_wrapper_decompound_rate};
 use crate::state::read_lsd_config;
 use crate::state::HUB_CONTRACT_KEY;
 use crate::state::{DecompoundConfig, DecompoundState, DECOMPOUND_CONFIG, DECOMPOUND_STATE};
@@ -151,7 +151,10 @@ pub fn execute<
         ExecuteMsg::UploadLogo(logo) => execute_upload_logo(deps, env, info, logo),
         ExecuteMsg::Decompound { recipient } => {
             execute_decompound::<I, T>(deps, env, info, recipient)
-        }
+        },
+        ExecuteMsg::UpdateDecompoundRate { decompound_rate } => {
+            update_decompound_rate::<I, T>(deps, env, info, decompound_rate)
+        },
     }
 }
 
@@ -175,7 +178,9 @@ pub fn query<
                 total_supply: token_info.total_supply,
                 exchange_rate: get_current_exchange_rate::<I, T>(deps, env.clone(), &mut state)
                     .map_err(|err| StdError::generic_err(err.to_string()))?,
-                expected_exchange_rate: get_expected_exchange_rate::<I, T>(deps, env, &mut state)
+                expected_exchange_rate: get_expected_exchange_rate::<I, T>(deps, env.clone(), &mut state)
+                    .map_err(|err| StdError::generic_err(err.to_string()))?,
+                max_decompound_ratio: get_lsd_wrapper_decompound_rate(deps, env)
                     .map_err(|err| StdError::generic_err(err.to_string()))?,
             })
         }
@@ -342,6 +347,28 @@ pub fn execute_decompound<
         ])
         .add_messages(out_messages);
 
+    Ok(res)
+}
+
+pub fn update_decompound_rate<
+I: Serialize + for<'b> Deserialize<'b>,
+T: LSDHub<I> + Serialize + for<'a> Deserialize<'a>,
+>(
+deps: DepsMut,
+env: Env,
+info: MessageInfo,
+decompound_rate: Option<Decimal>,
+) -> Result<Response, ContractError> {
+    DECOMPOUND_CONFIG.save(
+        deps.storage,
+        &DecompoundConfig {
+            max_decompound_ratio: decompound_rate,
+        },
+    )?;
+    let res = Response::new()
+        .add_attributes(vec![
+            attr("action", "update_decompound_rate"),
+        ]);
     Ok(res)
 }
 

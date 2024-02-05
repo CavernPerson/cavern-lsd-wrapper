@@ -3,6 +3,7 @@ use cw20_base::{msg::QueryMsg, ContractError};
 
 use basset::wrapper::ExecuteMsg;
 use wrapper_implementations::coin_with_limit;
+use basset::reward::MigrateMsg;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -27,4 +28,9 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     coin_with_limit::query(deps, env, msg)
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
+    coin_with_limit::migrate(_deps, _env, _msg)
 }
