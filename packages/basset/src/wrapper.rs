@@ -1,3 +1,4 @@
+use cosmwasm_schema::QueryResponses;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Binary;
 use cosmwasm_std::Decimal;
@@ -96,6 +97,63 @@ pub enum ExecuteMsg {
     Decompound {
         recipient: Option<String>,
     },
+    UpdateDecompoundRate {
+        decompound_rate: Option<Decimal>,
+    }
+ 
+}
+
+#[cw_serde]
+#[derive(QueryResponses)]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
+pub enum QueryMsg {
+    /// Returns the current balance of the given address, 0 if unset.
+    #[returns(cw20::BalanceResponse)]
+    Balance { address: String },
+    /// Returns metadata on the contract - name, decimals, supply, etc.
+    #[returns(TokenInfoResponse)]
+    TokenInfo {},
+    /// Only with "mintable" extension.
+    /// Returns who can mint and the hard cap on maximum tokens after minting.
+    #[returns(cw20::MinterResponse)]
+    Minter {},
+    /// Only with "allowance" extension.
+    /// Returns how much spender can use from owner account, 0 if unset.
+    #[returns(cw20::AllowanceResponse)]
+    Allowance { owner: String, spender: String },
+    /// Only with "enumerable" extension (and "allowances")
+    /// Returns all allowances this owner has approved. Supports pagination.
+    #[returns(cw20::AllAllowancesResponse)]
+    AllAllowances {
+        owner: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    /// Only with "enumerable" extension (and "allowances")
+    /// Returns all allowances this spender has been granted. Supports pagination.
+    #[returns(cw20::AllSpenderAllowancesResponse)]
+    AllSpenderAllowances {
+        spender: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    /// Only with "enumerable" extension
+    /// Returns all accounts that have balances. Supports pagination.
+    #[returns(cw20::AllAccountsResponse)]
+    AllAccounts {
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    /// Only with "marketing" extension
+    /// Returns more metadata on the contract to display in the client:
+    /// - description, logo, project url, etc.
+    #[returns(cw20::MarketingInfoResponse)]
+    MarketingInfo {},
+    /// Only with "marketing" extension
+    /// Downloads the embedded logo data (if stored on chain). Errors if no logo data is stored for this
+    /// contract.
+    #[returns(cw20::DownloadLogoResponse)]
+    DownloadLogo {},
 }
 
 #[derive(Default)]
@@ -129,5 +187,6 @@ pub struct TokenInfoResponseWithLimit {
     pub decimals: u8,
     pub total_supply: Uint128,
     pub exchange_rate: Decimal,
-    pub expected_exchange_rate: Decimal
+    pub expected_exchange_rate: Decimal,
+    pub max_decompound_ratio:Decimal,
 }

@@ -11,7 +11,7 @@ use cw20_base::ContractError;
 
 use crate::contract::SECONDS_PER_YEAR;
 use crate::state::{DECOMPOUND_CONFIG, DECOMPOUND_STATE};
-use crate::state::read_lsd_config;
+use crate::state::{read_lsd_config, read_lsd_decompound_rate};
 use crate::state::WrapperState;
 use crate::trait_def::LSDHub;
 
@@ -98,4 +98,13 @@ pub fn get_lsd_wrapper_exchange_rate<
         return Ok(Decimal::one())
     }
     Ok(Decimal::from_ratio(total_supply, total_lsd_balance))
+}
+
+pub fn get_lsd_wrapper_decompound_rate(deps: Deps, env: Env) -> Result<Decimal, ContractError>{
+
+let decompound_rate: Decimal = read_lsd_decompound_rate(deps.storage)?;
+if decompound_rate.is_zero(){
+    return Ok(Decimal::one())
+}
+Ok(decompound_rate)
 }

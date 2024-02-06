@@ -13,3 +13,9 @@
 # IDEs
 *.iml
 .idea
+
+# Private
+.env
+
+# Compilation
+**/target/

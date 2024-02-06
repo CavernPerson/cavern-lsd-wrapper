@@ -4,9 +4,12 @@ use cosmwasm_std::{Addr, Decimal, Uint128};
 pub type UnbondRequest = Vec<(u64, Uint128)>;
 
 #[cw_serde]
-pub struct InstantiateMsg {
-    pub reward_denom: String,
+pub struct OldInstantiateMsg {
+    pub reward_denom: String
 }
+
+#[cw_serde]
+pub struct InstantiateMsg {}
 
 #[cw_serde]
 #[derive(Default)]

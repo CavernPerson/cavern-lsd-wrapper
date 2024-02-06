@@ -28,7 +28,7 @@ use cosmwasm_std::testing::{mock_env, mock_info};
 
 use crate::contract::{execute, instantiate, query};
 use basset::hub::{QueryMsg, Parameters};
-use basset::hub::{ConfigResponse, ExecuteMsg, InstantiateMsg, StateResponse};
+use basset::hub::{ConfigResponse, ExecuteMsg, OldInstantiateMsg, StateResponse};
 
 use basset::hub::ExecuteMsg::UpdateConfig;
 
@@ -46,7 +46,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     reward_contract: String,
     token_contract: String,
 ) {
-    let msg = InstantiateMsg {
+    let msg = OldInstantiateMsg {
         reward_denom: "uusd".to_string(),
     };
 
@@ -71,7 +71,7 @@ fn proper_initialization() {
     let mut deps = dependencies(&[]);
 
     // successful call
-    let msg = InstantiateMsg {
+    let msg = OldInstantiateMsg {
         reward_denom: "uusd".to_string(),
     };
 

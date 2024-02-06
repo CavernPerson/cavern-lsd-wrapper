@@ -2,19 +2,21 @@ use cw_orch::{
     interface,
     prelude::*,
 };
-use basset::reward::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+pub use basset::reward::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 
 use cavern_lsd_reward::contract::{instantiate, execute, query, migrate};
 
-#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+use crate::WASM_SUFFIX;
+
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
 pub struct LsdRewards;
 
 impl<Chain: CwEnv> Uploadable for LsdRewards<Chain> {
     /// Return the path to the wasm file corresponding to the contract
     fn wasm(&self) -> WasmPath {
         artifacts_dir_from_workspace!()
-            .find_wasm_path("cavern_lsd_reward")
+            .find_wasm_path(&format!("cavern_lsd_reward{}", WASM_SUFFIX))
             .unwrap()
     }
     /// Returns a CosmWasm contract wrapper

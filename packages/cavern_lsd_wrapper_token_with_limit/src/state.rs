@@ -9,6 +9,7 @@ use serde::Serialize;
 use cw_storage_plus::Item;
 
 pub const LSD_CONFIG_KEY: &str = "lcd_config";
+pub const DECOMPOUND_CONFIG_KEY: &str = "decompound_config";
 pub const HUB_CONTRACT_KEY: Item<Addr> = Item::new("\u{0}\u{c}hub_contract");
 
 // We need to save the last rates that were decompounded in the past
@@ -33,6 +34,7 @@ pub struct DecompoundConfig {
     pub max_decompound_ratio: Option<Decimal>,
 }
 
+
 // meta is the token definition as well as the total_supply
 pub fn read_hub_contract(storage: &dyn Storage) -> StdResult<Addr> {
     HUB_CONTRACT_KEY.load(storage)
@@ -47,6 +49,12 @@ pub fn read_lsd_config<T: for<'a> Deserialize<'a> + Serialize>(
     storage: &dyn Storage,
 ) -> StdResult<T> {
     Item::new(LSD_CONFIG_KEY).load(storage)
+}
+
+pub fn read_lsd_decompound_rate<T: for<'a> Deserialize<'a> + Serialize>(
+    storage: &dyn Storage,
+) -> StdResult<T> {
+    Item::new(DECOMPOUND_CONFIG_KEY).load(storage)
 }
 
 pub fn store_lsd_config<
